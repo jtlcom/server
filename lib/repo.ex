@@ -1,5 +1,7 @@
 defmodule Repo do
   @character_table :characters
+  @init_cells 80
+  @warehouse_init_cells 60
 
   def init() do
     :dets.open_file(@character_table, [])
@@ -30,12 +32,15 @@ defmodule Repo do
         |> Map.merge(%{level: 1,
                        stats: %{},
                        points: %{hp: 100, exp: 0},
-                       currencies: %{coin: 10000, gold: 1000},
+                       currencies: %{coin: 10000, gold: 1000, bindGold: 1000000},
                        pos: %{map: 1, x: 10, y: 10},
-                       bag: %{},
-                       warehouse: %{},
-                       vip: %{level: 0, exp: 0},
-                       vsn: vsn
+                       bag: %{0 => %{id: 3, count: 6}, 1 => %{id: 1, count: 7}, 2 => %{id: 2, count: 5}, 3 => %{id: 4, count: 8},  4 => %{id: 5, count: 11}, 5 => %{id: 6, count: 13} },
+                       bagCells: @init_cells,
+                       warehouse: %{max: @warehouse_init_cells, bag: %{}},
+                       vip: %{level: 0, exp: 0, sec: -1},
+                       vsn: vsn,
+                       gainExpSpeed: %{speed: 1, sec: 0},
+                       onHookTime: 0#s
                     })
       ^vsn -> character
       _ -> character

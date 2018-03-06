@@ -19,7 +19,10 @@ defmodule Effect do
   def from_rewards(rewards) do
     rewards |> Enum.map(fn
       {:item, id, count} -> {:gain, {:item, id}, count}
+      {:gainExpSpeed, [times, sec], count} -> {:gainExpSpeed, times, sec * count}
+      {:vip, [lv, sec], count} -> {:vip, lv, sec * count}
       {point, amount} -> {:gain, point, amount}
+      reward -> reward
     end)
   end
 
@@ -96,9 +99,30 @@ defmodule Effect do
     end
   end
 
+  def resolve({:gainExpSpeed, times, sec}, {id, _context, _data}) do
+    new_speed = %{speed: times, sec: sec}
+    {{:prop_changed, id, new_speed}, %{gainExpSpeed: new_speed}}
+  end
+
+  def resolve({:onHookTime, times}, {id, _context, %{onHookTime: onHookTime}}) do
+    cur_times = onHookTime + times
+    {{:prop_changed, id, %{onHookTime: min(cur_times, 20)}}, %{onHookTime: min(cur_times, 20)}}
+  end
+
+  def resolve({:bagCells, num}, {id, _context, %{bagCells: bagCells}}) do
+    new_bagCells = bagCells + num
+    {{:prop_changed, id, %{bagCells: new_bagCells}}, %{bagCells: new_bagCells}}
+  end
+
+  def resolve({:vip, lv, sec}, {id, _context, %{vip: vip}}) do
+    new_vip = %{vip | level: lv, sec: sec}
+    {{:prop_changed, id, %{vip: new_vip}}, %{vip: new_vip}}
+  end
+
   def resolve(effect, {_id, _context, _data}) do
     IO.puts "unknown effect #{inspect effect}"
 
     {[], %{}}
   end
+
 end

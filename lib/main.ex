@@ -40,6 +40,7 @@ defmodule Main do
 
   defp bootstrap do
     Repo.init
+    Item.init
 
     port = Application.get_env(@app, :port, 3256)
     {:ok, _} = :ranch.start_listener(:tcp_gate, 10, :ranch_tcp, [port: port], Session, [])
