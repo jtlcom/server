@@ -6,6 +6,12 @@ defmodule Session do
   @timeout :infinity
   @batch 15
 
+  def log(msg, data) do
+    File.write("log.txt", "#{inspect msg}\n#{inspect data}\n\n", [:append])
+    # IO.inspect msg
+    # IO.inspect data
+  end
+
   def start_link(ref, socket, transport, opts) do
     {:ok, :proc_lib.spawn_link(__MODULE__, :init, [{ref, socket, transport, opts}])}
   end
@@ -40,6 +46,10 @@ defmodule Session do
   def handle_info({:tcp, socket, packet}, %{transport: transport} = state) do
     IO.puts packet
     {:ok, type, msg} = packet |> decode
+    #    Logger.debug "receive client socket msg, type is #{inspect type}, msg is #{inspect msg}"
+    if type != :ping and type != :move and type != :stop do
+      log("recv msg", {type, msg})
+    end
     case handle_request(type, msg, state) do
       {:reply, response, new_state} ->
         response |> deliver(transport, socket)
@@ -128,6 +138,9 @@ defmodule Session do
   end
 
   defp deliver({type, msg}, transport, socket) do
+    if type != :pong do
+      log("res msg", {type, msg})
+    end
     {:ok, output} = encode {type, msg}
     transport.send(socket, output)
   end
