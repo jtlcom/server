@@ -84,17 +84,25 @@ defmodule Pet do
     end
 
     # pet 升星 进阶
-    def pet_advanced(eat_item_id, count, {id, %{pet: %{pet_id: _pet_id, blessing: blesssing} = pet, bag: bag}}) do
+    def pet_advanced(eat_item_id, count, {id, %{pet: %{pet_id: _pet_id, blessing: blesssing, actived: actived} = pet, bag: bag}}) do
         with  true <- Inventory.enough?(bag, eat_item_id, count) do
             bless = @raise_items |> Map.get(eat_item_id, %{}) |> Map.get(:blessing, 0)
             now_bless = count * bless + blesssing
             new_pet_id = get_next_id(now_bless)
             new_pet = %{pet | pet_id: new_pet_id, blessing: now_bless}
+            actived_id = div(new_pet_id, 10) * 10 + 1
             cost = [{:item, eat_item_id, count}]
             {_, poped, new_bag} = Inventory.pop_some(bag, eat_item_id, count)
             pet_events = {{:pet, :advanced}, id, %{pet: new_pet}} 
             cost_events = poped |> Enum.map(fn {index, count} -> {{:bag, :lost}, id, %{index => count}} end)
-            context = %{action: {}, events: [pet_events, cost_events], changed: %{bag: new_bag, pet: new_pet}}
+            if Map.has_key?(actived, actived_id) do
+                context = %{action: {}, events: [pet_events, cost_events], changed: %{bag: new_bag, pet: new_pet}}
+            else
+                new_actived = Map.put(actived, actived_id, 0)
+                new_pet = %{pet | pet_id: new_pet_id, blessing: now_bless, actived: new_actived}
+                active_events = {{:pet, :active}, id, %{actived: new_actived}}
+                context = %{action: {}, events: [pet_events, cost_events, active_events], changed: %{bag: new_bag, pet: new_pet}}
+            end
             {:resolve, context, Effect.from_cost(cost)}
         else
             _ -> :ok

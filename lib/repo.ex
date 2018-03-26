@@ -36,7 +36,7 @@ defmodule Repo do
                        pos: %{map: 1, x: 10, y: 10},
                        bag: %{0 => %{id: 3, count: 600}, 1 => %{id: 1, count: 700}, 2 => %{id: 2, count: 500}, 3 => %{id: 4, count: 800},  4 => %{id: 5, count: 1100}, 5 => %{id: 6, count: 1300},
                        6 => %{count: 99, id: 1001}, 7 => %{count: 99, id: 1002}, 8 => %{count: 999, id: 201}, 9 => %{count: 8, id: 202}, 10 => %{count: 999, id: 203}, 11 => %{count: 999, id: 301},
-                       12 => %{count: 999, id: 401}, 13 => %{count: 999, id: 501}},
+                       12 => %{count: 999, id: 401}, 13 => %{count: 999, id: 501}, 14 => %{count: 999, id: 802}, 15 => %{count: 888, id: 810}},
                        bagCells: @init_cells,
                        warehouse: %{max: @warehouse_init_cells, bag: %{}},
                        vip: %{level: 0, exp: 0, sec: -1},
@@ -45,7 +45,7 @@ defmodule Repo do
                        onHookTime: 0, #s
                        mount: %{ mount_id: 1, blessing: 0, beast_soul: %{201 => 5, 202 => 400}, actived: %{ 101 => 0}, hh: 0},
                        pet: %{ pet_id: 1, blessing: 0, exp: 0, beast_soul: %{201 => 5, 202 => 400}, actived: %{ 101 => 0}, hh: 0},
-                       dresses: %{}
+                       dresses: %{actived: %{802 => 0}, exp: 0}
                     })
       ^vsn -> character
       _ -> character
