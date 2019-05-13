@@ -32,7 +32,6 @@ defmodule Bag do
     #选中背包的index进行购买 默认用:bindGold购买物品
     def buy(index, count,currencyType \\ :bindGold, {_id, %{bag: bag, currencies: currencies}} = all) do
         # Logger.debug("sell ")
-
         # Logger.debug "all: #{inspect all, pretty: true}"
         # Logger.debug "bag: #{inspect bag, pretty: true}"
         # Logger.debug "currencies: #{inspect currencies, pretty: true}"
