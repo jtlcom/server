@@ -1,7 +1,7 @@
 defmodule BattlePower do
 
     defdelegate merge(map1, map2), to: Map
-    
+
     def all({id, data}) do
         {:notify, [{{:battle, :all}, id, %{battle_power: all(data)}}]}
     end
@@ -23,7 +23,7 @@ defmodule BattlePower do
     defp count(details) do
         details
         |> Map.values()
-        |> Enum.reduce(0, fn detail, acc -> 
+        |> Enum.reduce(0, fn detail, acc ->
             acc + (detail[:all] || 0)
         end)
     end
@@ -31,7 +31,7 @@ defmodule BattlePower do
     def character(info) do
         %{character: CharacterCompute.compute(info)}
     end
-    
+
     def equipments(info) do
         %{equipments: EquipmentsCompute.compute(info)}
     end
@@ -62,7 +62,7 @@ defmodule CharacterCompute do
     def level(level) do
         attribute = Level.level(level) |> Map.get(:attribute, %{})
         case level do
-            0 -> 
+            0 ->
                 %{level: 0}
             _ ->
                 %{level: attributecompute(attribute)}
@@ -86,7 +86,7 @@ defmodule CharacterCompute do
         %{dresses: 0}
     end
 
-    def mount(mount) do        
+    def mount(mount) do
         %{mount: 0}
     end
 
@@ -115,18 +115,18 @@ end
 
 #装备相关计算
 defmodule EquipmentsCompute do
-    
+
     def compute(%{equipments: equipments} = data) do
         init =  %{all: 0, level: 0, enhanced: 0, additionProps: 0, gems: 0}
         case equipments do
-            %{} -> 
+            %{} ->
                 init
-            _ -> 
+            _ ->
                 equipped =
                 equipments
                 |> Map.values
                 |> Enum.filter(fn value -> value != %{} end)
-      
+
               case equipped do
                 [] -> init
                 _ -> handle(data)
@@ -139,40 +139,40 @@ defmodule EquipmentsCompute do
           equipments
           |> Map.values
           |> Enum.filter(fn value -> value != %{} end)
-    
+
         details = %{
           level: level(equiped),
           enhanced: enhanced(equiped),
           additionProps: additionProps(equiped),
           gems: gems(equiped),
         }
-    
+
         all = details |> Map.values |> Enum.sum
         Map.put(details, :all, all)
     end
 
     def level(equipments) do
-        %{level: 0} 
+        %{level: 0}
     end
-    
+
     def enhanced(equipments) do
-        %{enhanced: 0} 
+        %{enhanced: 0}
     end
 
     def additionProps(equipments) do
-        %{additionProps: 0} 
+        %{additionProps: 0}
     end
 
     def gems(equipments) do
-        %{gems: 0} 
+        %{gems: 0}
     end
 
 end
 
 defmodule Level do
-    use GameDef 
+    use GameDef
 
-    GameDef.defconf view: "actors/levels", getter: :level
+    # GameDef.defconf view: "actors/levels", getter: :level
     def level(_), do: 0
 
 end

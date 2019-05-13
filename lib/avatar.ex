@@ -1,12 +1,14 @@
 defmodule Avatar.Supervisor do
   use Supervisor
   @name Avatars
+  require Logger
 
   def start_link(_) do
     Supervisor.start_link(__MODULE__, [], name: @name)
   end
 
   def start_child(args, opts \\ []) do
+    Logger.debug "Avatar.Supervisor -> start_child(args, opts \\ []) do"
     Supervisor.start_child(@name, [args, opts])
   end
 
@@ -21,20 +23,42 @@ defmodule Avatar do
 
   require Logger
 
+  @spec start_link(any(), any(), [
+          {:debug, [:log | :statistics | :trace | {any(), any()}]}
+          | {:hibernate_after, :infinity | non_neg_integer()}
+          | {:name, atom() | {:global, any()} | {:via, atom(), any()}}
+          | {:spawn_opt,
+             :link
+             | :monitor
+             | {:fullsweep_after, non_neg_integer()}
+             | {:min_bin_vheap_size, non_neg_integer()}
+             | {:min_heap_size, non_neg_integer()}
+             | {:priority, :high | :low | :normal}}
+          | {:timeout, :infinity | non_neg_integer()}
+        ]) :: :ignore | {:error, any()} | {:ok, pid()}
   def start_link(_, args, opts \\ []) do
+    # Logger.debug "Avatar -> start_child(args, opts \\ []) do"
     GenServer.start_link(__MODULE__, args, opts)
   end
 
   # session may be an AI controller, or a client connection
   # TODO: design another mechanism to support restart notification to session/ai/observer
   def init({id, session}) do
+    # Logger.debug "Avatar ->  init({id, session}) do"
     GenServer.cast(session, {:ack, self()})
 
     data = Character.load(id, @vsn)
-    {:ok, {id, session, data}}
+    Logger.debug "Avatar ->  init({id, session})  return"
+    {:ok, {id, session, data}}  # avatar_id  session_pid,date_character
   end
 
+  ####
+  # def cast() do
+  #   GenServer.call(__MODULE__,{:login,[]})
+  # end
+  ####
   def handle_cast({:login, _}, {id, session, %{pos: pos} = data}) do
+    Logger.debug "avatar login"
     # send login response, with map info (id, x, y) for client to preload
     GenServer.cast(session, {:reply, {:login, [id, pos.map, pos.x, pos.y]}})
 
@@ -47,14 +71,16 @@ defmodule Avatar do
   end
 
   def handle_cast({:logout, _}, {id, _session, data} = state) do
+
     Character.save(id, data)
 
     {:stop, :normal, state}
   end
 
   def handle_cast({{module, action}, args}, {id, _, data} = state) do
+    # Logger.debug "avatar -> handle_cast({{module, action}, args}, {id, _, data} = state)"
     # TODO: pass module sub state when dispatching action
-    dispatch(module, action, List.wrap(args) ++ [{id, data}])
+    dispatch(module, action, List.wrap(args) ++ [{id, data}]) #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     |> handle_result(state)
   end
 
@@ -65,6 +91,8 @@ defmodule Avatar do
   defp dispatch(module, action, args) do
     require Utils
 
+    # Logger.debug "dispatch"
+    # 将字符串转为tuple,即对应成相应的模块
     mod = "Elixir." <> (module |> Atom.to_string |> Macro.camelize) |> Utils.to_atom
     func = action |> Atom.to_string |> Macro.underscore |> Utils.to_atom
 
@@ -72,11 +100,16 @@ defmodule Avatar do
 
     if function_exported?(mod, func, length(args)) do
       try do
+        # Logger.debug "apply"
+        # 调用相应的模块去处理
         apply(mod, func, args)
+
       rescue
+
         err -> IO.puts "#{module}:#{action} error: #{inspect err}"
       end
     else
+      # Logger.debug "else"
       {:reply, {{module, action}, "action received"}}
     end
   end
@@ -94,15 +127,22 @@ defmodule Avatar do
 
   defp handle_result({:resolve, context, effects}, {id, session, data}) do
     # apply partial resolved changes
-    {resolved, data} = resolved(context, {id, data})
+    # Logger.debug "here2"
+    # Logger.debug "handle_result({:resolve, context, effects}, {id, session, data}) do"
+    {resolved, data} = resolved(context, {id, data})  #sell这一步没有起作用
 
+    # Logger.debug "effects : #{inspect effects, pretty: true}"
     {events, data} =
-      List.wrap(effects)
-      |> Enum.flat_map_reduce(data, fn effect, data ->
+      #List.wrap(effects)
+      #List.flatten(effects)
+
+      effects
+      #|> Enum.flat_map_reduce(data, fn effect, data ->
+      |> Enum.map_reduce(data, fn effect, data ->
         {events, changed} = resolve(effect, {id, context, data})
         {List.wrap(events), data |> merge(changed)}
       end)
-
+#events 给了客户端，暂时不用管
     GenServer.cast(session, {:notify, resolved ++ events})
     {:noreply, {id, session, data}}
   end
@@ -112,6 +152,7 @@ defmodule Avatar do
   end
 
   defp resolved(context, {id, data}) when is_map(context) do
+    Logger.debug " resolved(context, {id, data}) when is_map(context) do"
     events = context |> Map.get(:events) |> List.wrap
     changed = context |> Map.get(:changed, %{})
 
@@ -120,6 +161,7 @@ defmodule Avatar do
   end
 
   defp resolved(_context, {_, data}) do
+    # Logger.debug "resolved(_context, {_, data}) do"
     {[], data}
   end
 
@@ -135,24 +177,24 @@ defmodule Avatar do
 
     {events, changed} =
       events |> Enum.reduce({events, changed}, fn event, {events, changed} ->
-      {new_events, new_changed} = Rules.apply_rule(event, {id, data})
+      {new_events, new_changed} = Rules.apply_rule(event, {id, data})   #Rules.apply_rule( 目前什么都没有做
       {events ++ List.wrap(new_events), changed |> Map.merge(new_changed)}
     end)
 
     {events, changed}
   end
 
-  defp merge(data, nil) do
+  defp merge(data, nil) do  #什么事都没有做
     data
   end
 
-  defp merge(data, changed) when is_map(changed) do
+  defp merge(data, changed) when is_map(changed) do  #改变的地方是一个map
     data |> Map.merge(changed)
   end
 
-  defp merge(data, changed) when is_list(changed) do
+  defp merge(data, changed) when is_list(changed) do  #改变的地方是一个list
     changed |> Enum.reduce(data, fn
-      {path, value}, data -> data |> put_in(path, value)
+      {path, value}, data -> data |> put_in(path, value) #更改data，access 路径为path 的值为value
     end)
   end
 
@@ -165,6 +207,7 @@ defmodule Avatar do
   end
 
   defp process_login({_id, data}) do
+    # Logger.debug "process_login data: #{inspect data, pretty: true}"
     data
   end
 end

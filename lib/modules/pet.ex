@@ -1,5 +1,5 @@
 defmodule Pet do
-    use GameDef 
+    use GameDef
 
     # 升星所需要的item
     @raise_items %{1 => %{name: "pet_bless_card", blessing: 150}, 2 => %{name: "pet_pill", blessing: 10}}
@@ -14,31 +14,31 @@ defmodule Pet do
     # 吞噬的装备
     @swallow_equip %{301 => %{exp: 100}, 401 => %{exp: 1000}, 501 => %{exp: 1500}}
 
-    GameDef.defconf view: "actors/pet", getter: :get
+    # GameDef.defconf view: "actors/pet", getter: :get
 
     def get(_), do: %{}
-    
+
     # %{ pet_id: 1, blessing: 0, exp: 0, beast_soul: %{a_id => use_count, b_id => 0, c_id => 0}, actived: %{actived_id => blessing}, hh: hh_id}
     def prop(pet) do
-        pet_prop = pet |> Map.get(:pet_id, 0) |> get() |> Map.get(:props, %{}) |> Map.to_list() 
-        beast_prop = pet 
-        |> Map.get(:beast_soul, %{}) 
-        |> Enum.map(fn {k, v} -> 
-            Map.get(@soul_items, k) |> Enum.map(fn {k, v1} -> {k, v1 * v} end) 
-        end) 
+        pet_prop = pet |> Map.get(:pet_id, 0) |> get() |> Map.get(:props, %{}) |> Map.to_list()
+        beast_prop = pet
+        |> Map.get(:beast_soul, %{})
+        |> Enum.map(fn {k, v} ->
+            Map.get(@soul_items, k) |> Enum.map(fn {k, v1} -> {k, v1 * v} end)
+        end)
         |> List.flatten()
         Enum.concat(pet_prop, beast_prop)
     end
 
     # 吞噬装备 equip is a map: %{id => count, id1 => count1, id2 => count2}
     def swallow(equip, {id, %{pet: %{exp: exp} = pet, bag: bag}}) do
-        with true <- equip |> Map.to_list() |> Enum.map(fn {id, count} -> Inventory.enough?(bag, id, count) end) 
+        with true <- equip |> Map.to_list() |> Enum.map(fn {id, count} -> Inventory.enough?(bag, id, count) end)
             |> Enum.all?(fn x -> true == x end)
         do
             cost = equip |> Map.to_list() |> Enum.map(fn {id, count} -> {:item, id, count} end)
-            {cost_events, [new_bag, new_exp]} = equip 
-            |> Map.to_list() 
-            |> Enum.flat_map_reduce([bag, exp], fn({id, count}, [bag, exp]) ->              
+            {cost_events, [new_bag, new_exp]} = equip
+            |> Map.to_list()
+            |> Enum.flat_map_reduce([bag, exp], fn({id, count}, [bag, exp]) ->
                 {_, poped, bag} = Inventory.pop_some(bag, id, count)
                 events = (poped |> Enum.map(fn {index, count} -> {{:bag, :lost}, id, %{index => count}} end))
                 exp = exp + count * @swallow_equip[id][:exp]
@@ -46,7 +46,7 @@ defmodule Pet do
             end)
             new_pet = %{pet | exp: new_exp}
             swallow_events  = {{:pet, :swallow}, id, %{exp: new_exp}}
-            context = %{action: {}, events: [swallow_events, cost_events], changed: %{bag: new_bag, pet: new_pet}}   
+            context = %{action: {}, events: [swallow_events, cost_events], changed: %{bag: new_bag, pet: new_pet}}
             {:resolve, context, Effect.from_cost(cost)}
         else
             _ -> :ok
@@ -65,7 +65,7 @@ defmodule Pet do
             new_pet = %{pet | actived: new_actived}
             active_events = {{:pet, :active}, id, %{actived: new_actived}}
             cost_events = poped |> Enum.map(fn {index, count} -> {{:bag, :lost}, id, %{index => count}} end)
-            context = %{action: {}, events: [active_events, cost_events], changed: %{bag: new_bag, pet: new_pet}}   
+            context = %{action: {}, events: [active_events, cost_events], changed: %{bag: new_bag, pet: new_pet}}
             {:resolve, context, Effect.from_cost(cost)}
         else
             _ -> :ok
@@ -93,15 +93,15 @@ defmodule Pet do
             actived_id = div(new_pet_id, 10) * 10 + 1
             cost = [{:item, eat_item_id, count}]
             {_, poped, new_bag} = Inventory.pop_some(bag, eat_item_id, count)
-            pet_events = {{:pet, :advanced}, id, %{pet: new_pet}} 
+            pet_events = {{:pet, :advanced}, id, %{pet: new_pet}}
             cost_events = poped |> Enum.map(fn {index, count} -> {{:bag, :lost}, id, %{index => count}} end)
-            if Map.has_key?(actived, actived_id) do
-                context = %{action: {}, events: [pet_events, cost_events], changed: %{bag: new_bag, pet: new_pet}}
+            context = if Map.has_key?(actived, actived_id) do
+                %{action: {}, events: [pet_events, cost_events], changed: %{bag: new_bag, pet: new_pet}}
             else
                 new_actived = Map.put(actived, actived_id, 0)
                 new_pet = %{pet | pet_id: new_pet_id, blessing: now_bless, actived: new_actived}
                 active_events = {{:pet, :active}, id, %{actived: new_actived}}
-                context = %{action: {}, events: [pet_events, cost_events, active_events], changed: %{bag: new_bag, pet: new_pet}}
+                %{action: {}, events: [pet_events, cost_events, active_events], changed: %{bag: new_bag, pet: new_pet}}
             end
             {:resolve, context, Effect.from_cost(cost)}
         else
@@ -132,10 +132,10 @@ defmodule Pet do
     # 灵丹
     def beast_soul(item_id, count, {id, %{pet: %{beast_soul: beast_soul} = pet, bag: bag}}) do
         with true <- Inventory.enough?(bag, item_id, count) do
-            if Map.has_key?(beast_soul, item_id) do
-                new_beat_soul = %{beast_soul | item_id => beast_soul[item_id] + count}
+            new_beat_soul = if Map.has_key?(beast_soul, item_id) do
+                %{beast_soul | item_id => beast_soul[item_id] + count}
             else
-                new_beat_soul = beast_soul |> Map.merge(%{item_id => count})
+                beast_soul |> Map.merge(%{item_id => count})
             end
             new_pet =  %{pet | beast_soul: new_beat_soul}
             cost = [{:item, item_id, count}]

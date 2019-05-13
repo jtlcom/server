@@ -1,11 +1,11 @@
 defmodule Dressup do
     use GameDef
 
-    @actived_items %{802 => %{item_id: 802, count: 1}, 810 => %{item_id: 810, count: 2}} 
-    @raise_items %{802 => %{item_id: 802, count: 1}, 810 => %{item_id: 810, count: 2}} 
+    @actived_items %{802 => %{item_id: 802, count: 1}, 810 => %{item_id: 810, count: 2}}
+    @raise_items %{802 => %{item_id: 802, count: 1}, 810 => %{item_id: 810, count: 2}}
     @undress_id -1
 
-    GameDef.defconf view: "actors/dress", getter: :get
+    # GameDef.defconf view: "actors/dress", getter: :get
 
     def get(_), do: %{}
 
@@ -27,7 +27,7 @@ defmodule Dressup do
             new_dress = %{dress | actived: new_actived}
             active_events = {{type, :active}, id, %{actived: new_actived}}
             cost_events = poped |> Enum.map(fn {index, count} -> {{:bag, :lost}, id, %{index => count}} end)
-            context = %{action: {}, events: [active_events, cost_events], changed: %{bag: new_bag, dress: new_dress}}   
+            context = %{action: {}, events: [active_events, cost_events], changed: %{bag: new_bag, dress: new_dress}}
             {:resolve, context, Effect.from_cost(cost)}
         else
             _ -> :ok
@@ -48,13 +48,13 @@ defmodule Dressup do
             new_dress = %{dress | actived: new_actived}
             active_events = {{type, :active}, id, %{actived: new_actived}}
             cost_events = poped |> Enum.map(fn {index, count} -> {{:bag, :lost}, id, %{index => count}} end)
-            context = %{action: {}, events: [active_events, cost_events], changed: %{bag: new_bag, dress: new_dress}}   
+            context = %{action: {}, events: [active_events, cost_events], changed: %{bag: new_bag, dress: new_dress}}
             {:resolve, context, Effect.from_cost(cost)}
         else
             _ -> :ok
         end
     end
-    
+
     # 穿戴
     def dress(type, dress_id, {id, data}) do
         dress = Map.get(data, type, %{})
@@ -79,7 +79,7 @@ defmodule Dressup do
             _ -> :ok
         end
     end
-    
+
      # 分解
     def breakup(type, breakup_id, count, {id, %{bag: bag} = data}) do
         dress = Map.get(data, type, %{})
@@ -90,7 +90,7 @@ defmodule Dressup do
             new_dress = Map.put(dress, :exp, cur_exp)
             breakup_events = {{type, :breakup}, id, %{dress: new_dress}}
             cost_events = poped |> Enum.map(fn {index, count} -> {{:bag, :lost}, id, %{index => count}} end)
-            context = %{action: {}, events: [breakup_events, cost_events], changed: %{bag: new_bag, dress: new_dress}}   
+            context = %{action: {}, events: [breakup_events, cost_events], changed: %{bag: new_bag, dress: new_dress}}
             {:resolve, context, Effect.from_cost(cost)}
         else
             _ -> :ok

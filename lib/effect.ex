@@ -1,9 +1,13 @@
 defmodule Effect do
 
+  require Logger
+
+  #解析出消耗物品的格式
   def from_cost(cost) when is_tuple(cost) do
     List.wrap(cost) |> from_cost
   end
 
+   #解析出消耗物品的格式
   def from_cost(cost) do
     cost |> Enum.map(fn
       {:item, id, count} -> {:lost, {:item, id}, count}
@@ -12,10 +16,12 @@ defmodule Effect do
     end)
   end
 
+  #解析出 收益的格式
   def from_rewards(rewards) when is_tuple(rewards) do
     List.wrap(rewards) |> from_rewards
   end
 
+  #解析出 收益的格式
   def from_rewards(rewards) do
     rewards |> Enum.map(fn
       {:item, id, count} -> {:gain, {:item, id}, count}
@@ -26,22 +32,36 @@ defmodule Effect do
     end)
   end
 
+  #把 花费和收益的格式解析出来，再合并到一个list
   def from_cost_rewards(cost, rewards) do
     Enum.concat from_cost(cost), from_rewards(rewards)
   end
 
+
+  #未对_context做处理  _context对应bag  :sell  /:buy
   def resolve({:gain, :item, item}, {id, _context, %{bag: bag}}) do
     {cell, bag} = bag |> Inventory.store(item)
     event = {{:bag, :gain}, id, %{cell => item}}
-
     {event, %{bag: bag}}
   end
 
-  def resolve({:gain, {:item, item_id}, count}, {id, _context, %{bag: bag}}) do
-    {cells, bag} = bag |> Inventory.stack(item_id, count)
+  #给warehouse增加物品
+  def resolve({:gain, :warehouse,{:item_id, item_id}, count}, {id, _context, %{warehouse: warehouse}}) do
+    Logger.debug "warehouse resolve({:gain, {:item_id, item_id}, count}, {id, _context, %{bag: bag}}) do"
+    %{bag: bag} = warehouse
+    {cells, bag} = bag |> Inventory.stack(item_id, count, warehouse.max)
+    warehouse = Map.put(warehouse, :bag, bag)
 
-    {{{:bag, :gain}, id, Map.new(cells)}, %{bag: bag}}
+    {{{:warehouse, :gain}, id, Map.new(cells)}, %{warehouse: warehouse}}
   end
+
+    #给bag增加物品
+    def resolve({:gain, {:item, item_id}, count}, {id, _context, %{bag: bag}}) do
+      Logger.debug "resolve({:gain, {:item, item_id}, count}, {id, _context, %{bag: bag}}) do"
+      {cells, bag} = bag |> Inventory.stack(item_id, count)
+
+      {{{:bag, :gain}, id, Map.new(cells)}, %{bag: bag}}
+    end
 
   def resolve({:gain, {mod, prop}, amount}, {id, _context, data}) do
     with group when not is_nil(group) <- Map.get(data, mod),
@@ -55,13 +75,14 @@ defmodule Effect do
   end
 
   def resolve({:gain, prop, amount}, {id, _context, %{currencies: currencies, points: points}}) do
+    Logger.debug "resolve({:gain, prop, amount}, {id, _context, %{currencies: currencies, points: points}}) do"
     if Map.has_key?(currencies, prop) do
       current = Map.get(currencies, prop) + amount
-      {{:prop_changed, id, %{prop => current}}, %{currencies: %{currencies | prop => current}}}
+      {{:prop_changed, id, %{prop => current}}, %{currencies: %{currencies | prop => current}}}  #后面这一部分修改金币
     else
       if Map.has_key?(points, prop) do
         current = Map.get(points, prop) + amount
-        {{:prop_changed, id, %{prop => current}}, %{points: %{points | prop => current}}}
+        {{:prop_changed, id, %{prop => current}}, %{points: %{points | prop => current}}} #后面这一部分修改points  -》   points: %{hp: 100, exp: 0},
       end
     end
   end
@@ -74,6 +95,20 @@ defmodule Effect do
   def resolve({:lost, {:item, item_id}, count}, {id, _context, %{bag: bag}}) do
     {^count, poped, bag} = Inventory.pop_some(bag, item_id, count)
     {{{:bag, :lost}, id, Map.new(poped)}, %{bag: bag}}
+  end
+
+  def resolve({:lost, :warehouse,{:item_id, item_id}, count}, {id, _context, %{warehouse: warehouse}}) do
+    Logger.debug "warehouse resolve({:lost, {:item_id, item_id}, count}, {id, _context, %{bag: bag}}) do"
+    %{bag: bag} = warehouse
+    # {cells, bag} = bag |> Inventory.stack(item_id, count, warehouse.max)
+    # warehouse = Map.put(warehouse, :bag, bag)
+
+    # {{{:warehouse, :gain}, id, Map.new(cells)}, %{warehouse: warehouse}}
+
+
+    {^count, poped, bag} = Inventory.pop_some(bag, item_id, count)
+    warehouse = Map.put(warehouse, :bag, bag)
+    {{{:warehouse, :lost}, id, Map.new(poped)}, %{warehouse: warehouse}}
   end
 
   def resolve({:lost, {mod, prop}, amount}, {id, _context, data}) do

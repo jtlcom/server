@@ -1,5 +1,5 @@
 defmodule Mount do
-    use GameDef 
+    use GameDef
 
     # 升星所需要的item
     @raise_items %{1 => %{name: "mount_bless_card", blessing: 150}, 2 => %{name: "mount_pill", blessing: 10}}
@@ -10,18 +10,18 @@ defmodule Mount do
     # 兽魂items
     @soul_items %{201 => %{life: 800}, 202 => %{life: 4000, defence: 40}, 203 => %{defence: 40}}
 
-    GameDef.defconf view: "actors/mount", getter: :get
+    # GameDef.defconf view: "actors/mount", getter: :get
 
     def get(_), do: %{}
-    
+
     # %{ mount_id: 0, blessing: 0, beast_soul: %{a_id => use_count, b_id => 0, c_id => 0}, actived: %{actived_id => blessing}, hh: hh_id}
     def prop(mount) do
-        mount_prop = mount |> Map.get(:mount_id, 0) |> get() |> Map.get(:props, %{}) |> Map.to_list() 
-        beast_prop = mount 
-        |> Map.get(:beast_soul, %{}) 
-        |> Enum.map(fn {k, v} -> 
-            Map.get(@soul_items, k) |> Enum.map(fn {k, v1} -> {k, v1 * v} end) 
-        end) 
+        mount_prop = mount |> Map.get(:mount_id, 0) |> get() |> Map.get(:props, %{}) |> Map.to_list()
+        beast_prop = mount
+        |> Map.get(:beast_soul, %{})
+        |> Enum.map(fn {k, v} ->
+            Map.get(@soul_items, k) |> Enum.map(fn {k, v1} -> {k, v1 * v} end)
+        end)
         |> List.flatten()
         Enum.concat(mount_prop, beast_prop)
     end
@@ -38,13 +38,13 @@ defmodule Mount do
             new_mount = %{mount | actived: new_actived}
             active_events = {{:mount, :active}, id, %{actived: new_actived}}
             cost_events = poped |> Enum.map(fn {index, count} -> {{:bag, :lost}, id, %{index => count}} end)
-            context = %{action: {}, events: [active_events, cost_events], changed: %{bag: new_bag, mount: new_mount}}   
+            context = %{action: {}, events: [active_events, cost_events], changed: %{bag: new_bag, mount: new_mount}}
             {:resolve, context, Effect.from_cost(cost)}
         else
             _ -> :ok
         end
     end
-    
+
     # 幻化
     def hh(new_hh_id, {id, %{mount: %{mount_id: mount_id, actived: actived, hh: hh_id} = mount}}) do
         if (new_hh_id == mount_id and new_hh_id != hh_id) or (Map.has_key?(actived, new_hh_id) and new_hh_id != hh_id) do
@@ -66,15 +66,15 @@ defmodule Mount do
             actived_id = div(new_mount_id, 10) * 10 + 1
             cost = [{:item, eat_item_id, count}]
             {_, poped, new_bag} = Inventory.pop_some(bag, eat_item_id, count)
-            mount_events = {{:mount, :advanced}, id, %{mount: new_mount}} 
+            mount_events = {{:mount, :advanced}, id, %{mount: new_mount}}
             cost_events = poped |> Enum.map(fn {index, count} -> {{:bag, :lost}, id, %{index => count}} end)
-            if Map.has_key?(actived, actived_id) do
-                context = %{action: {}, events: [mount_events, cost_events], changed: %{bag: new_bag, mount: new_mount}}
+            context = if Map.has_key?(actived, actived_id) do
+                %{action: {}, events: [mount_events, cost_events], changed: %{bag: new_bag, mount: new_mount}}
             else
                 new_actived = Map.put(actived, actived_id, 0)
                 new_mount = %{mount | mount_id: new_mount_id, blessing: now_bless, actived: new_actived}
                 active_events = {{:mount, :active}, id, %{actived: new_actived}}
-                context = %{action: {}, events: [mount_events, cost_events, active_events], changed: %{bag: new_bag, mount: new_mount}}
+                %{action: {}, events: [mount_events, cost_events, active_events], changed: %{bag: new_bag, mount: new_mount}}
             end
             {:resolve, context, Effect.from_cost(cost)}
         else
@@ -105,10 +105,10 @@ defmodule Mount do
     # 兽魂
     def beast_soul(item_id, count, {id, %{mount: %{beast_soul: beast_soul} = mount, bag: bag}}) do
         with true <- Inventory.enough?(bag, item_id, count) do
-            if Map.has_key?(beast_soul, item_id) do
-                new_beat_soul = %{beast_soul | item_id => beast_soul[item_id] + count}
+            new_beat_soul = if Map.has_key?(beast_soul, item_id) do
+                %{beast_soul | item_id => beast_soul[item_id] + count}
             else
-                new_beat_soul = beast_soul |> Map.merge(%{item_id => count})
+                beast_soul |> Map.merge(%{item_id => count})
             end
             new_mount =  %{mount | beast_soul: new_beat_soul}
             cost = [{:item, item_id, count}]

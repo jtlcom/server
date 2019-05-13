@@ -1,5 +1,5 @@
 defmodule Action do
-  def match?(nil, _data), do: true
+  def match?(nil, _data), do: true   #判断requirements （需要的条件） ，data是否满足，requirement可以是bag的东西，玩家等级（level），vip等级或其他属性
 
   def match?(requirements, data) when is_list(requirements) or is_map(requirements) do
     Enum.all?(requirements, &Action.match?(&1, data))
