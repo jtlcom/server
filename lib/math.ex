@@ -16,4 +16,17 @@ defmodule Math do
       cost -> levelup(level + 1, exp - cost, fun)
     end
   end
+
+
+  #每一级所需要的exp
+  def level_exp(level) do 
+    case level do 
+      1 -> 10 
+      2 -> 20 
+      3 -> 40 
+      4 -> 100 
+      5 -> -1 
+    end 
+  end
+
 end

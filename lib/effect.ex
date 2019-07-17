@@ -74,15 +74,19 @@ defmodule Effect do
     end
   end
 
+  #增加货币、hp、exp
   def resolve({:gain, prop, amount}, {id, _context, %{currencies: currencies, points: points}}) do
     Logger.debug "resolve({:gain, prop, amount}, {id, _context, %{currencies: currencies, points: points}}) do"
     if Map.has_key?(currencies, prop) do
       current = Map.get(currencies, prop) + amount
-      {{:prop_changed, id, %{prop => current}}, %{currencies: %{currencies | prop => current}}}  #后面这一部分修改金币
+      {{:prop_changed, id, %{prop => current}}, %{currencies: %{currencies | prop => current}}}  
+      #这一部分修改金币
+
     else
       if Map.has_key?(points, prop) do
         current = Map.get(points, prop) + amount
-        {{:prop_changed, id, %{prop => current}}, %{points: %{points | prop => current}}} #后面这一部分修改points  -》   points: %{hp: 100, exp: 0},
+        {{:prop_changed, id, %{prop => current}}, %{points: %{points | prop => current}}} 
+        #这一部分修改points  -》   points: %{hp: 100, exp: 0},
       end
     end
   end

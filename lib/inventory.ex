@@ -6,9 +6,9 @@ defmodule Inventory do
   end
 
   def store(bag, item, bagMaxSize) do  #把这个item存入这个bag
-  index = available_cell(bag, bagMaxSize)  #找到bag可用的index，新的index，和index值为nil表示可用
-  {index, bag |> Map.put(index, item)}
-end
+    index = available_cell(bag, bagMaxSize)  #找到bag可用的index，新的index，和index值为nil表示可用
+    {index, bag |> Map.put(index, item)}
+  end
 
   def store_at(bag, index, item) do
     {index, bag |> Map.put(index, item)}
@@ -127,8 +127,8 @@ end
   end
 
   def available_cell(bag, bagMaxSize) do #找到bag可用的index，新的index，和index值为nil表示可用
-  0..(bagMaxSize-1) |> Enum.find(fn index -> available?(bag, index) end)
-end
+    0..(bagMaxSize-1) |> Enum.find(fn index -> available?(bag, index) end)
+  end
 
   defp stock(nil), do: 0
 

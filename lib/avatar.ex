@@ -49,7 +49,7 @@ defmodule Avatar do
 
     data = Character.load(id, @vsn)
     Logger.debug "Avatar ->  init({id, session})  return"
-    {:ok, {id, session, data}}  # avatar_id  session_pid,date_character
+    {:ok, {id, session, data}}  # avatar_id  session_pid , date_character
   end
 
   ####

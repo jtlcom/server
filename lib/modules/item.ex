@@ -3,6 +3,7 @@ defmodule Item do
 
   def init() do
     :dets.open_file(@items_table, [])
+    initgoods() 
   end
 
   #仅仅初始化了与bag中sell，buy，bag2warehouse，warehouse2bag函数相关的信息

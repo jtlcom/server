@@ -32,6 +32,6 @@ defmodule SsssServer.Mixfile do
      {:distillery, "~> 1.5"},
      {:cowboy, "~> 1.0"},
      {:plug, "~> 1.4"},
-     {:changed_reloader, "~> 0.1.4"}]  #加入这个依赖后更改源代码后只需保存，iex中加载的模块会同步更细新
+     {:changed_reloader, "~> 0.1.4"}]  #加入这个依赖后更改源代码后只需保存，iex中加载的模块会同步更新
   end
 end

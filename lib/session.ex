@@ -180,7 +180,8 @@ defmodule Session do
         :ok
     end
 
-    {:ok, avatar_pid} = Realm.start_avatar avatar_id, self()  #!!!!!!!!self()是session的pid    在此传给avatar!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    {:ok, avatar_pid} = Realm.start_avatar avatar_id, self()  
+    #!!!!!!!!self()是session的pid    在此传给avatar!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     GenServer.cast(avatar_pid, {:login, []})
 
     {:noreply, %{state | state: :playing}
