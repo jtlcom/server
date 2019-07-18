@@ -21,3 +21,4 @@ erl_crash.dump
 
 # dets files
 characters
+items
