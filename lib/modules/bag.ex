@@ -103,7 +103,7 @@ defmodule Bag do
       do 
         IO.puts "old => level : #{level} , exp : #{exp} " 
         lost_effects1 = [{:lost, {:bag, index}, count}] 
-        lost_effects2 = [{:lost , {:points , :hp} , count * 10 } ] 
+        lost_effects2 = [{:lost , {:points , :hp} , count } ] 
         lost_effects = lost_effects1 ++ lost_effects2 
         income_effects = income |> Enum.map(fn {currencyType, price} -> {:gain, {:points , :exp}, price*count} end)
         
@@ -116,6 +116,14 @@ defmodule Bag do
       end 
     end
 
+    #用于判定是否能够升级，主要调用了Math模块的levelup函数，并将返回值传回avatar解析
+    def level_up?( {_id, %{level: level, points: %{exp: exp } }} = all ) do 
+      {level, exp} = Math.levelup( level , exp ) 
+
+      context = {:level_up? , {} } 
+      effects = [ {:modify , level , exp } ]
+      { :resolve , context , effects } 
+    end 
 
 
     #展示所有信息

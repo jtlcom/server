@@ -7,13 +7,13 @@ defmodule Math do
     a + (b - a) * t
   end
 
-  def levelup(level, exp, fun) do
-    case fun.(level) do
+  def levelup(level, exp ) do
+    case Math.level_exp(level) do
       nil -> {level, exp}   # max level reached
       -1 -> {level, 0}      # max level reached
       cost when cost > exp -> {level, exp}
       cost when cost == exp -> {level + 1, 0}
-      cost -> levelup(level + 1, exp - cost, fun)
+      cost -> levelup(level + 1, exp - cost ) 
     end
   end
 

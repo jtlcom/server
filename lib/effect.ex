@@ -91,6 +91,16 @@ defmodule Effect do
     end
   end
 
+
+  #角色经验升级系统
+  def resolve( {:modify , level , exp } , {id, _context, %{level: _lv, points: points } } ) do 
+    new_level = level
+    new_points = %{points | exp: exp } 
+    map = %{level: new_level, points: new_points } 
+    {{:prop_changed, id, map }, map }
+  end 
+
+
   def resolve({:lost, {:bag, index}, count}, {id, _context, %{bag: bag}}) do
     {lost, bag} = Inventory.pop_some_at(bag, index, count)
     {{{:bag, :lost}, id, %{index => lost}}, %{bag: bag}}
