@@ -44,6 +44,11 @@ defmodule Logical do
     action_object(id, :buy)
   end
 
+  def swallow_equip( id ) do 
+    action(id, :sell)
+    
+  end
+
   def action(id, action) do
     case get(id) do
       %{^action => rule} -> rule

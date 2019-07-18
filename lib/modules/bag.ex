@@ -18,14 +18,15 @@ defmodule Bag do
 
     #只显示等级、hp和exp
     def show_level( {_id , %{level: level , points: %{ exp: exp , hp: hp } } } = _all ) do 
-      IO.puts "level : #{inspect level } , exp : #{inspect exp } , hp : #{inspect hp } " 
+      IO.puts "level : #{level } , exp : #{exp } , hp : #{hp } " 
     end
 
     #充值魔石 gold
-    def recharge( count, {_id, %{ currencies: currencies}} = _all) do
+    def recharge( count, {_id, %{ currencies: %{gold: gold} }} = _all) do
       #old_currencies = Map.get( currencies, currencyType, 0) 
       #Logger.debug "recharge 1 " 
-      IO.puts "old_currencies : #{inspect currencies} " 
+      IO.puts "old => gold : #{gold} " 
+      IO.puts "new => gold : #{gold+count} " 
       #income_effects = {:gain, currencyType, count}
       #income = %{gold: count }
       #income = income |> Enum.map(fn {currencyType, count} -> {:gain, currencyType, count} end) 
@@ -39,23 +40,29 @@ defmodule Bag do
     end
 
     #花费 魔石:gold 买 金币:coin
-    def change_for_coin( count,{_id, %{bag: bag, currencies: currencies}} = _all) do
-      IO.puts "old_currencies : #{inspect currencies} " 
+    def change_for_coin( count,{_id, %{bag: bag, currencies: %{ gold: gold , coin: coin } }} ) do
+      if gold >= count do 
+        IO.puts "old => gold : #{gold} , coin : #{coin} " 
+        IO.puts "new => gold : #{gold-count} , coin : #{coin+count*1000} " 
 
-      lost_effects = [ {:lost , :gold , count } ] 
-      income_effects = [ {:gain , :coin , count * 1000 } ] 
+        lost_effects = [ {:lost , :gold , count } ] 
+        income_effects = [ {:gain , :coin , count * 1000 } ] 
 
-      context = {:change_for_coin , {:bag , count } } 
-      effects = lost_effects ++ income_effects 
+        context = {:change_for_coin , {:bag , count } } 
+        effects = lost_effects ++ income_effects 
 
-      {:resolve , context , effects } 
+        {:resolve , context , effects } 
+      else 
+        IO.puts "Not enough gold ! " 
+        :ok 
+      end 
     end
 
     #将背包里的 金币:coin 存入银行
-    def save2bank( count,{_id, %{bank: bank , currencies: %{coin: currencies_coin } , currencies: currencies }} = _all ) do 
+    def save2bank( count,{_id, %{bank: %{coin: bank_coin} , currencies: %{coin: currencies_coin } , currencies: currencies }} = _all ) do 
       if currencies_coin >= count do 
-        IO.puts "currencies : #{inspect currencies} " 
-        IO.puts "bank : #{inspect bank }" 
+        IO.puts "old => currencies : #{currencies_coin} , bank : #{bank_coin} " 
+        IO.puts "new => currencies : #{currencies_coin-count} , bank : #{bank_coin+count} " 
 
         lost_effects = [ { :lost , { :currencies , :coin} , count } ] 
         income_effects = [ { :gain , { :bank , :coin} , count } ] 
@@ -71,10 +78,10 @@ defmodule Bag do
     end
 
     #从银行中取出已存入的 金币:coin 
-    def bank2bag( count,{_id, %{bank: bank , bank: %{ coin: bank_coin } , currencies: currencies}} = _all ) do 
+    def bank2bag( count,{_id, %{ bank: %{ coin: bank_coin } , currencies: %{ coin: currencies_coin } }} = _all ) do 
       if bank_coin >= count do 
-        IO.puts "currencies : #{inspect currencies} " 
-        IO.puts "bank : #{inspect bank }" 
+        IO.puts "old => currencies : #{currencies_coin} , bank : #{bank_coin} " 
+        IO.puts "new => currencies : #{currencies_coin+count} , bank : #{bank_coin-count} " 
 
         lost_effects = [ { :lost , { :bank , :coin } , count } ] 
         income_effects = [ { :gain , { :currencies , :coin } , count } ] 
@@ -89,8 +96,25 @@ defmodule Bag do
       end 
     end
 
-    
-
+    #角色吞噬装备 消耗物品和hp 获得exp
+    def swallow_equip( index , count , currencyType \\ :bindGold , {_id, %{bag: bag, points: %{hp: hp , exp: exp } , level: level } } ) do 
+      with {item , stock} when stock >= count <- Inventory.get(bag , index ) , 
+        income <- Logical.swallow_equip(item.id) |> Map.take(List.wrap(currencyType) ) || [] 
+      do 
+        IO.puts "old => level : #{level} , exp : #{exp} " 
+        lost_effects1 = [{:lost, {:bag, index}, count}] 
+        lost_effects2 = [{:lost , {:points , :hp} , count * 10 } ] 
+        lost_effects = lost_effects1 ++ lost_effects2 
+        income_effects = income |> Enum.map(fn {currencyType, price} -> {:gain, {:points , :exp}, price*count} end)
+        
+        context = {:swallow_equip , {:bag, index} } 
+        effects = lost_effects ++ income_effects 
+        { :resolve , context , effects } 
+      else 
+        #IO.puts "Some error ! " 
+        _ -> :ok 
+      end 
+    end
 
 
 
