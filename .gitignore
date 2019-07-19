@@ -21,6 +21,7 @@ erl_crash.dump
 
 # dets files
 characters
-
-# dets files 
 items
+
+# text files 
+*.txt

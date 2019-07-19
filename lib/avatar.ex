@@ -19,7 +19,7 @@ end
 
 defmodule Avatar do
   use GenServer, restart: :temporary
-  @vsn 1
+  @vsn 2
 
   require Logger
 
@@ -47,7 +47,7 @@ defmodule Avatar do
     # Logger.debug "Avatar ->  init({id, session}) do"
     GenServer.cast(session, {:ack, self()})
 
-    data = Character.load(id, @vsn)
+    data = Character.load(id, @vsn)  #vsn \\ = 1 
     Logger.debug "Avatar ->  init({id, session})  return"
     {:ok, {id, session, data}}  # avatar_id  session_pid , date_character
   end
@@ -152,7 +152,7 @@ defmodule Avatar do
   end
 
   defp resolved(context, {id, data}) when is_map(context) do
-    Logger.debug " resolved(context, {id, data}) when is_map(context) do"
+    #Logger.debug " resolved(context, {id, data}) when is_map(context) do"
     events = context |> Map.get(:events) |> List.wrap
     changed = context |> Map.get(:changed, %{})
 

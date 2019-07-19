@@ -4,7 +4,7 @@ defmodule Character do
   def create(account_id, name, gene) do
     avatar_id = Repo.next_id(:character)
     Repo.insert(:character, {avatar_id, account_id, name, %{gene: gene}})
-#创建角色时并没有初始化或载入角色数据
+    #创建角色时并没有初始化或载入角色数据
     {:ok, avatar_id}
   end
 
@@ -17,6 +17,8 @@ defmodule Character do
   def load(avatar_id, vsn \\ 0) do #avatar 调用时 vsn = 1
   # Logger.debug "Character -> load(avatar_id, vsn \\ 0)"
     data = Repo.load(:character, avatar_id)
+    # Repo.load -> return : 
+    # data = %{gene: gene , account_id: account_id, name: name}
     Logger.debug "between"
     Logger.debug "data-chararcter: #{ inspect data, pretty: true }"
     Repo.migrate(:character, vsn, data)

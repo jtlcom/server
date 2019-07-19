@@ -32,7 +32,7 @@ defmodule Session do
 
   # Handle avatar process restart
   def handle_cast({:ack, avatar_pid}, %{state: :playing} = state) do
-    Logger.debug("handle_cast({:ack, avatar_pid}, %{state: :playing} = state)")
+    #Logger.debug("handle_cast({:ack, avatar_pid}, %{state: :playing} = state)")
     {:noreply, %{state | avatar_pid: avatar_pid}}
   end
 

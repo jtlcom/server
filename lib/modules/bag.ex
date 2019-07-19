@@ -125,6 +125,25 @@ defmodule Bag do
       { :resolve , context , effects } 
     end 
 
+    #将背包里的物品以一定的价格放入拍卖行 
+    def bag2auction(index, count , money , {_id, %{bag: bag, auction: auction } } ) do 
+      with {item, stock} <- Inventory.get(bag, index) , 
+            true <-  Inventory.auction_can_store?(auction,item.id)  #判断仓库还能不能存放
+      do 
+        get_effects = [{:gain,:auction, {:item_id, item.id}, count , money }]
+        lost_effects = [{:lost, {:bag, index}, count }]
+
+        context = {:bag2auction , {:bag , index , count , money } } 
+        effects = get_effects ++ lost_effects 
+        { :resolve , context , effects } 
+      else 
+        _ -> :ok 
+      end 
+    end 
+
+
+
+
 
     #展示所有信息
     def show_all({_id, %{bag: bag, currencies: currencies}} = all) do

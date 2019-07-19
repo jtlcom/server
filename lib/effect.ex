@@ -55,6 +55,17 @@ defmodule Effect do
     {{{:warehouse, :gain}, id, Map.new(cells)}, %{warehouse: warehouse}}
   end
 
+  #给拍卖行auction 增加物品
+  def resolve( {:gain , :auction , {:item_id , item_id} , count , money } ,  {id, _context, %{auction: %{item: item , max: max } = auction} } ) do 
+    {cells , item } = item |> Inventory.stack( item_id , count , max ) 
+    item = Map.put item , :gold , money 
+    auction = Map.put auction , :item , item 
+
+    {{{:auction, :gain}, id, Map.new(cells)}, %{auction: auction}}
+  end
+
+
+
     #给bag增加物品
     def resolve({:gain, {:item, item_id}, count}, {id, _context, %{bag: bag}}) do
       Logger.debug "resolve({:gain, {:item, item_id}, count}, {id, _context, %{bag: bag}}) do"
