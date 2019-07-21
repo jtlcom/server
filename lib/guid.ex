@@ -17,6 +17,9 @@ defmodule Guid do
   def describe(guid) when (guid >>> 0) === 0x0000 do
     %{catgory: :avatar, id: guid &&& 0xFFFFFF, server_id: (guid >>> 24) &&& 0xFFFF}
   end
+  def describe(guid)  do
+    %{catgory: :avatar, id: guid &&& 0xFFFFFF, server_id: (guid >>> 24) &&& 0xFFFF}
+  end
 
   def online?(guid) do
     match?([_], Registry.lookup(Registry.ByGuid, guid))
