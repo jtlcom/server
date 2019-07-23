@@ -7,6 +7,22 @@ defmodule Math do
     a + (b - a) * t
   end
 
+  def vip_up(vip , exp) do 
+    case Math.vip_exp(vip) do 
+      nil -> {vip , exp } 
+      -1 -> {vip , exp } 
+      cost when cost > exp -> {vip , exp } 
+      cost when cost == exp -> {vip + 1 , 0 } 
+      cost -> vip_up(vip + 1 , exp - cost ) 
+    end 
+  end
+
+  def vip_exp(vip) do 
+    case vip do 
+      _ -> 10 
+    end 
+  end
+
   def levelup(level, exp ) do
     case Math.level_exp(level) do
       nil -> {level, exp}   # max level reached

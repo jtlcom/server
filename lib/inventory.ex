@@ -134,6 +134,7 @@ end
 
   defp stock(item) do
     item |> Map.get(:count, 1)
+    # Map.get :item(map 之前取出的map) , :count(key) , default = 1 
   end
 
   defp available?(bag, index) do  #bag没有index 的key，或bag的index的值是nil ，这两种情况表示bag的index可用 返回true
@@ -155,5 +156,13 @@ end
         bag |> Map.to_list |> Enum.any?(fn {_index,%{id: id} } -> match?(id, item_id) end)
     end
   end
+
+  def auction_can_store?( %{max: max , item: item }, item_id ) do 
+    case max > map_size(item) do 
+      true ->true 
+      false -> 
+        item |> Map.to_list |> Enum.any?(fn {_index,%{id: id} } -> match?(id, item_id) end) 
+    end
+  end 
 
 end

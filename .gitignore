@@ -22,3 +22,7 @@ erl_crash.dump
 # dets files
 characters
 items
+auctions
+
+# text files 
+*.txt

@@ -32,7 +32,7 @@ defmodule Session do
 
   # Handle avatar process restart
   def handle_cast({:ack, avatar_pid}, %{state: :playing} = state) do
-    Logger.debug("handle_cast({:ack, avatar_pid}, %{state: :playing} = state)")
+    #Logger.debug("handle_cast({:ack, avatar_pid}, %{state: :playing} = state)")
     {:noreply, %{state | avatar_pid: avatar_pid}}
   end
 
@@ -50,6 +50,7 @@ defmodule Session do
     {:event, List.wrap(events) |> Enum.map(&Tuple.to_list/1)} |> deliver(transport, socket)
     {:noreply, state}
   end
+  
   def handle_cast(_, %{state: :playing, transport: transport, socket: socket} = state) do
     Logger.debug("handle_cast(_, %{state: :playing, transport: transport, socket: socket} = state)")
     {:noreply, state}

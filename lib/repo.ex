@@ -22,11 +22,14 @@ defmodule Repo do
 
   #导入角色数据（若是第一次导入，只包含很少的数据）
   def load(:character, id) do
-
       #{avatar_id, account_id, name, %{gene: gene}}  创建角色时的数据
     [{_, account_id, name, data}] = :dets.lookup(@character_table, id)
-    data |> Map.merge(%{account_id: account_id, name: name})   #把account_id , name 这两条数据合到data中
+    data |> Map.merge(%{account_id: account_id, name: name})   
+    # data = %{gene: gene }  -> %{gene: gene , account_id: account_id, name: name}
+    #把account_id , name 这两条数据合到data中
     # Logger.debug "Repo -> load(:character, id) end"
+
+    # return data = %{gene: gene , account_id: account_id, name: name}
   end
 
   def save(:character, id, character) do
@@ -35,9 +38,14 @@ defmodule Repo do
   end
 
   #为第一次加载的角色初始化数据
-  def migrate(:character, vsn, character) do   #如果character中的 vsn 为0，则创建character的数据 其中vsn为传进来的vsn
-  Logger.debug "Repo -> migrate(:character, vsn, character) do"
-    case Map.get(character, :vsn, 0) do         #如果character中的 vsn 为传进来的vsn，则不对character数据做修改
+  def migrate(:character, vsn, character) do   
+  #character是Character.load(:character, vsn, data)中的data，而vsn为1 
+  # character = data = %{gene: gene , account_id: account_id, name: name}
+  
+  #如果character中的 vsn 为0，则创建character的数据 其中vsn为传进来的vsn
+  #Logger.debug "Repo -> migrate(:character, vsn, character) do"
+    character = case Map.get(character, :vsn, 0) do        
+      #如果character中的 vsn 为传进来的vsn，则不对character数据做修改
       0 ->              #新角色第一次加载数据
       # Logger.debug "case 0"
         character
@@ -56,28 +64,32 @@ defmodule Repo do
                        12 => %{count: 1000, id: 401}, 13 => %{count: 1000, id: 501}, 
                        14 => %{count: 1000, id: 802}, 15 => %{count: 1000, id: 810}},
                        bagCells: @init_cells,
-                       warehouse: %{max: @warehouse_init_cells, bag: %{}},
-                       vip: %{level: 0, exp: 0, sec: -1},
-                       vsn: vsn,
+                       warehouse: %{max: @warehouse_init_cells, bag: %{}}, 
+                       auction: %{max: 10 , item: %{} } , 
+                       vip: %{level: 0, exp: 0, sec: -1} , 
+                       vsn: 1 , 
                        gainExpSpeed: %{speed: 1, sec: 0},
                        onHookTime: 0,
                        mount: %{ mount_id: 1, blessing: 0, beast_soul: %{201 => 5, 202 => 400}, actived: %{ 101 => 0}, hh: 0},
                        pet: %{ pet_id: 1, blessing: 0, exp: 0, beast_soul: %{201 => 5, 202 => 400}, actived: %{ 101 => 0}, hh: 0},
                        dresses: %{actived: %{802 => 0}, exp: 0}
                     })
-      1 -> character |> Map.put(:c, 0) |> Map.put(:vsn, 1)
-      ## 2 -> character |> Map.put(:d, 0) |> Map.put(:vsn, 2)
-      ## 3 -> character |> Map.put(:e, 0) |> Map.put(:vsn, 3)
+      1 -> 
+      # Logger.debug "--1--"
+      character |> Map.put(:currencies, Map.put(character.currencies , :ep , 100 ) ) |> Map.put(:vsn, 2)
+      
+      # 2 -> character |> Map.put(:d, 0) |> Map.put(:vsn, 3)
+      # 3 -> character |> Map.put(:e, 0) |> Map.put(:vsn, 4)
       ^vsn -> character
       _ -> character
     end
 
-    ## if Map.get(character, :vsn, 0) != vsn do
-    ##   migrate(:character, vsn, character)
-    ## else
-    ##   character
-    ## end
-    ## 此处##注释的部分可用于动态更新角色的信息
+    if Map.get(character, :vsn, 0) != vsn do
+      migrate(:character, vsn, character)
+    else
+      character
+    end
+    # 此处##注释的部分可用于动态更新角色的信息
   end
 
   def next_id(:character) do
