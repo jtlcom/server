@@ -74,6 +74,12 @@ defmodule Effect do
       {{{:bag, :gain}, id, Map.new(cells)}, %{bag: bag}}
     end
 
+  def resolve({:gain, {:vip, :exp}, amount}, {id, _context, %{vip: %{ level: level , exp: exp } = vip }= data}) do
+    current = exp + amount
+    {new_level , new_exp } = Math.vip_up( level , current ) 
+    {{:prop_changed, id, %{vip: %{exp: new_exp , level: new_level}}}, %{vip: %{vip | exp: new_exp , level: new_level}}}
+  end
+
   def resolve({:gain, {mod, prop}, amount}, {id, _context, data}) do
     with group when not is_nil(group) <- Map.get(data, mod),
       original when not is_nil(original) <- Map.get(group, prop),
@@ -104,10 +110,16 @@ defmodule Effect do
 
 
   #角色经验升级系统
-  def resolve( {:modify , level , exp } , {id, _context, %{level: _lv, points: points } } ) do 
+  def resolve( {:modify_level , level , exp } , {id, _context, %{level: _lv, points: points } } ) do 
     new_level = level
     new_points = %{points | exp: exp } 
     map = %{level: new_level, points: new_points } 
+    {{:prop_changed, id, map }, map }
+  end 
+
+  def resolve( {:modify_vip , vip , exp } , {id, _context, %{vip: %{level: _vip , exp: _exp} = old_vip } } ) do 
+    new_vip  = %{ old_vip | level: vip , exp: exp } 
+    map = %{ vip: new_vip } 
     {{:prop_changed, id, map }, map }
   end 
 

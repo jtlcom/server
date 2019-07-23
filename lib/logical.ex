@@ -46,7 +46,6 @@ defmodule Logical do
 
   def swallow_equip( id ) do 
     action(id, :sell)
-    
   end
 
   def action(id, action) do

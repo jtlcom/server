@@ -121,21 +121,41 @@ defmodule Bag do
       {level, exp} = Math.levelup( level , exp ) 
 
       context = {:level_up? , {} } 
-      effects = [ {:modify , level , exp } ]
+      effects = [ {:modify_level , level , exp } ]
       { :resolve , context , effects } 
     end 
 
+    def vip_up?( {_id, %{vip: %{ level: vip , exp: exp } }} = all ) do 
+      {vip , exp } = Math.vip_up( vip , exp ) 
+
+      context = {:vip_up? , {} } 
+      effects = [ {:modify_vip , vip , exp } ] 
+      { :resolve , context , effects } 
+    end
+
+    def notify_change( value1 \\ :level , value2 , {_id, %{level: _level, points: %{exp: _exp } }} = all ) do 
+      changed = %{ value1 => value2 } 
+      { :notify , {:notify_change}, changed } 
+    end
+
+    def reply_send( value \\ :currencies , {_id, %{level: _level } = data } = all ) do 
+      value = Map.take(data , [value] ) 
+      Logger.debug " #{inspect value} " 
+      { :reply , value } 
+    end
+
     #将背包里的物品以一定的价格放入拍卖行 
-    def bag2auction(index, count , money , {_id, %{bag: bag, auction: auction } } ) do 
+    def bag2auction(index, count , money , {_id, %{bag: bag, name: name , auction: auction } } ) do 
       with {item, stock} <- Inventory.get(bag, index) , 
-            true <-  Inventory.auction_can_store?(auction,item.id)  #判断仓库还能不能存放
+            true <-  Inventory.auction_can_store?(auction,item.id)  #判断能不能存放
       do 
-        get_effects = [{:gain,:auction, {:item_id, item.id}, count , money }]
+        # get_effects = [{:gain,:auction, {:item_id, item.id}, count , money }]
         lost_effects = [{:lost, {:bag, index}, count }]
+        Auction.insert( {name , item.id , %{ name: name , id: item.id , stock: count , money: money } } ) 
 
         context = {:bag2auction , {:bag , index , count , money } } 
-        effects = get_effects ++ lost_effects 
-        { :resolve , context , effects } 
+        # effects = get_effects ++ lost_effects 
+        { :resolve , context , lost_effects } 
       else 
         _ -> :ok 
       end 
@@ -151,7 +171,7 @@ defmodule Bag do
     end
 
     # 出售 默认出售物品后获得:bindGold
-    def sell(index, count,currencyType \\ :bindGold, {_id, %{bag: bag, currencies: currencies}} = _all) do
+    def sell(index, count,currencyType \\ :bindGold, {_id, %{bag: bag, currencies: currencies, vip: %{exp: exp }=vip }} = _all) do
         # Logger.debug("sell ")
         # Logger.debug "all: #{inspect all, pretty: true}"
         # Logger.debug "bag: #{inspect bag, pretty: true}"
@@ -164,10 +184,13 @@ defmodule Bag do
             # Logger.debug "item: #{inspect item, pretty: true}"
             # Logger.debug "item.id: #{inspect item.id, pretty: true}"
             Logger.debug "income: #{inspect income, pretty: true}"
-            income_effects = income |> Enum.map(fn {currencyType, price} -> {:gain, currencyType, price*count} end) #计算卖出后的收益
+
+            # income_effects = income |> Enum.map(fn {currencyType, price} -> {:gain, currencyType, price*count} end) #计算卖出后的收益
+            effects = [{:gain,:coin,10*count},{:gain,:ep,count},
+                      {:gain,{:vip , :exp},count},{:lost, {:bag, index}, count}] 
             # Logger.debug "income_effects: #{inspect income_effects, pretty: true}"
-            lost_effects = [{:lost, {:bag, index}, count}] #bag中减少的物品和数量
-            {:resolve, {:sell, {:bag, index}}, lost_effects ++ income_effects}
+            lost_effects = [] #bag中减少的物品和数量
+            {:resolve,{:sell,{:bag, index}},effects}
         else
             _ -> :ok
         end

@@ -19,8 +19,8 @@ defmodule Character do
     data = Repo.load(:character, avatar_id)
     # Repo.load -> return : 
     # data = %{gene: gene , account_id: account_id, name: name}
-    Logger.debug "between"
-    Logger.debug "data-chararcter: #{ inspect data, pretty: true }"
+    # Logger.debug "between"
+    # Logger.debug "data-chararcter: #{ inspect data, pretty: true }"
     Repo.migrate(:character, vsn, data)
     # Logger.debug "Character -> load(avatar_id, vsn \\ 0)  end"
   end

@@ -41,6 +41,7 @@ defmodule Main do
   defp bootstrap do
     Repo.init  #打开存放角色资料的文件（通过:dets）
     Item.init  #打开存放物品资料的文件（通过:dets）
+    Auction.init #打开存放拍卖行物品资料的文件（通过:dets）
 
     #从./config/config.exs中获取
     port = Application.get_env(@app, :port, 3256)

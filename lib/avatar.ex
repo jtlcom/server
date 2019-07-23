@@ -47,7 +47,7 @@ defmodule Avatar do
     # Logger.debug "Avatar ->  init({id, session}) do"
     GenServer.cast(session, {:ack, self()})
 
-    data = Character.load(id, @vsn)  #vsn \\ = 1 
+    data = Character.load(id, @vsn)  #vsn \\ = 2 
     Logger.debug "Avatar ->  init({id, session})  return"
     {:ok, {id, session, data}}  # avatar_id  session_pid , date_character
   end

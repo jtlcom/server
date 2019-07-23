@@ -75,7 +75,7 @@ defmodule Repo do
                        dresses: %{actived: %{802 => 0}, exp: 0}
                     })
       1 -> 
-      Logger.debug "--1--"
+      # Logger.debug "--1--"
       character |> Map.put(:currencies, Map.put(character.currencies , :ep , 100 ) ) |> Map.put(:vsn, 2)
       
       # 2 -> character |> Map.put(:d, 0) |> Map.put(:vsn, 3)
