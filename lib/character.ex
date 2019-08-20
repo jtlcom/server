@@ -17,7 +17,6 @@ defmodule Character do
   def load(avatar_id, vsn \\ 0) do #avatar 调用时 vsn = 1
   # Logger.debug "Character -> load(avatar_id, vsn \\ 0)"
     data = Repo.load(:character, avatar_id)
-    Logger.debug "between"
     Logger.debug "data-chararcter: #{ inspect data, pretty: true }"
     Repo.migrate(:character, vsn, data)
     # Logger.debug "Character -> load(avatar_id, vsn \\ 0)  end"

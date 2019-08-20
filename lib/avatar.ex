@@ -19,7 +19,7 @@ end
 
 defmodule Avatar do
   use GenServer, restart: :temporary
-  @vsn 1
+  @vsn 2
 
   require Logger
 
@@ -122,7 +122,7 @@ defmodule Avatar do
   defp handle_result({:notify, events, changed}, {id, session, data}) do
     {events, changed} = apply_rules({events, changed}, {id, data})
     GenServer.cast(session, {:notify, events})
-    {:noreply, {id, session, data |> merge(changed)}}
+    {:noreply, {id, session, merge({id, data}, changed)}}
   end
 
   defp handle_result({:resolve, context, effects}, {id, session, data}) do
@@ -140,7 +140,7 @@ defmodule Avatar do
       #|> Enum.flat_map_reduce(data, fn effect, data ->
       |> Enum.map_reduce(data, fn effect, data ->
         {events, changed} = resolve(effect, {id, context, data})
-        {List.wrap(events), data |> merge(changed)}
+        {List.wrap(events), merge({id, data}, changed)}
       end)
 #events 给了客户端，暂时不用管
     GenServer.cast(session, {:notify, resolved ++ events})
@@ -157,7 +157,7 @@ defmodule Avatar do
     changed = context |> Map.get(:changed, %{})
 
     {events, changed} = apply_rules({events, changed}, {id, data})
-    {events, merge(data, changed)}
+    {events, merge({id, data}, changed)}
   end
 
   defp resolved(_context, {_, data}) do
@@ -188,14 +188,18 @@ defmodule Avatar do
     data
   end
 
-  defp merge(data, changed) when is_map(changed) do  #改变的地方是一个map
-    data |> Map.merge(changed)
+  defp merge({id, data}, changed) when is_map(changed) do  #改变的地方是一个map
+    new_data =  Map.merge(data, changed)
+    Character.save(id, new_data)
+    new_data
   end
 
-  defp merge(data, changed) when is_list(changed) do  #改变的地方是一个list
-    changed |> Enum.reduce(data, fn
+  defp merge({id, data}, changed) when is_list(changed) do  #改变的地方是一个list
+    new_data = changed |> Enum.reduce(data, fn
       {path, value}, data -> data |> put_in(path, value) #更改data，access 路径为path 的值为value
     end)
+    Character.save(id, new_data)
+    new_data
   end
 
   defp resolve(effect, {id, context, data}) do
@@ -206,8 +210,11 @@ defmodule Avatar do
     [["", id, data]]
   end
 
-  defp process_login({_id, data}) do
+  @thirty_days_act_id 1055
+  defp process_login({id, data} = state) do
     # Logger.debug "process_login data: #{inspect data, pretty: true}"
-    data
+    now_time = Utils.timestamp()
+    changed = Periods.ThirtyDays.check_reset(@thirty_days_act_id, now_time, state)
+    merge(state, changed)
   end
 end

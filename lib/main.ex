@@ -49,4 +49,14 @@ defmodule Main do
 
     :ok
   end
+
+  def prep_stop(state) do
+
+    # def save(avatar_id, data) do
+    #   Repo.save(:character, avatar_id, data)
+    # end
+    Logger.info "mian>prep_stop> state is #{inspect state, pretty: true}"
+    Repo.close()
+    state
+  end
 end
