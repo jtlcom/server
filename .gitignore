@@ -20,4 +20,8 @@ erl_crash.dump
 *.ez
 
 # dets files
-characters
+character
+items
+
+# ignore .elixir_ls
+/.elixir_ls/
