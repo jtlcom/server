@@ -1,3 +1,2 @@
 defmodule Points do
-
 end

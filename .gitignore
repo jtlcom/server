@@ -20,8 +20,8 @@ erl_crash.dump
 *.ez
 
 # dets files
-character
-items
+characters
 
-# ignore .elixir_ls
+# For VS-Code plugins, also ignore
 /.elixir_ls/
+server_limit_loot

@@ -1,5 +1,6 @@
 defmodule Action do
-  def match?(nil, _data), do: true   #判断requirements （需要的条件） ，data是否满足，requirement可以是bag的东西，玩家等级（level），vip等级或其他属性
+  # 判断requirements （需要的条件） ，data是否满足，requirement可以是bag的东西，玩家等级（level），vip等级或其他属性
+  def match?(nil, _data), do: true
 
   def match?(requirements, data) when is_list(requirements) or is_map(requirements) do
     Enum.all?(requirements, &Action.match?(&1, data))
@@ -32,6 +33,6 @@ defmodule Action do
 
   def match?({prop, amount}, %{currencies: currencies, points: points}) do
     (Map.has_key?(currencies, prop) and Map.get(currencies, prop, 0) >= amount) or
-    (Map.has_key?(points, prop) and Map.get(points, prop, 0) >= amount)
+      (Map.has_key?(points, prop) and Map.get(points, prop, 0) >= amount)
   end
 end

@@ -8,7 +8,7 @@ defmodule Avatar.Supervisor do
   end
 
   def start_child(args, opts \\ []) do
-    Logger.debug "Avatar.Supervisor -> start_child(args, opts \\ []) do"
+    Logger.debug("Avatar.Supervisor -> start_child(args, opts \\ []) do")
     Supervisor.start_child(@name, [args, opts])
   end
 
@@ -48,8 +48,9 @@ defmodule Avatar do
     GenServer.cast(session, {:ack, self()})
 
     data = Character.load(id, @vsn)
-    Logger.debug "Avatar ->  init({id, session})  return"
-    {:ok, {id, session, data}}  # avatar_id  session_pid,date_character
+    Logger.debug("Avatar ->  init({id, session})  return")
+    # avatar_id  session_pid,date_character
+    {:ok, {id, session, data}}
   end
 
   ####
@@ -58,7 +59,7 @@ defmodule Avatar do
   # end
   ####
   def handle_cast({:login, _}, {id, session, %{pos: pos} = data}) do
-    Logger.debug "avatar login"
+    Logger.debug("avatar login")
     # send login response, with map info (id, x, y) for client to preload
     GenServer.cast(session, {:reply, {:login, [id, pos.map, pos.x, pos.y]}})
 
@@ -71,7 +72,6 @@ defmodule Avatar do
   end
 
   def handle_cast({:logout, _}, {id, _session, data} = state) do
-
     Character.save(id, data)
 
     {:stop, :normal, state}
@@ -80,7 +80,8 @@ defmodule Avatar do
   def handle_cast({{module, action}, args}, {id, _, data} = state) do
     # Logger.debug "avatar -> handle_cast({{module, action}, args}, {id, _, data} = state)"
     # TODO: pass module sub state when dispatching action
-    dispatch(module, action, List.wrap(args) ++ [{id, data}]) #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    #! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    dispatch(module, action, List.wrap(args) ++ [{id, data}])
     |> handle_result(state)
   end
 
@@ -93,8 +94,8 @@ defmodule Avatar do
 
     # Logger.debug "dispatch"
     # 将字符串转为tuple,即对应成相应的模块
-    mod = "Elixir." <> (module |> Atom.to_string |> Macro.camelize) |> Utils.to_atom
-    func = action |> Atom.to_string |> Macro.underscore |> Utils.to_atom
+    mod = ("Elixir." <> (module |> Atom.to_string() |> Macro.camelize())) |> Utils.to_atom()
+    func = action |> Atom.to_string() |> Macro.underscore() |> Utils.to_atom()
 
     Utils.ensure_module(mod)
 
@@ -103,10 +104,8 @@ defmodule Avatar do
         # Logger.debug "apply"
         # 调用相应的模块去处理
         apply(mod, func, args)
-
       rescue
-
-        err -> IO.puts "#{module}:#{action} error: #{inspect err}"
+        err -> IO.puts("#{module}:#{action} error: #{inspect(err)}")
       end
     else
       # Logger.debug "else"
@@ -129,20 +128,21 @@ defmodule Avatar do
     # apply partial resolved changes
     # Logger.debug "here2"
     # Logger.debug "handle_result({:resolve, context, effects}, {id, session, data}) do"
-    {resolved, data} = resolved(context, {id, data})  #sell这一步没有起作用
+    # sell这一步没有起作用
+    {resolved, data} = resolved(context, {id, data})
 
     # Logger.debug "effects : #{inspect effects, pretty: true}"
+    # List.wrap(effects)
+    # List.flatten(effects)
     {events, data} =
-      #List.wrap(effects)
-      #List.flatten(effects)
-
       effects
-      #|> Enum.flat_map_reduce(data, fn effect, data ->
+      # |> Enum.flat_map_reduce(data, fn effect, data ->
       |> Enum.map_reduce(data, fn effect, data ->
         {events, changed} = resolve(effect, {id, context, data})
         {List.wrap(events), merge({id, data}, changed)}
       end)
-#events 给了客户端，暂时不用管
+
+    # events 给了客户端，暂时不用管
     GenServer.cast(session, {:notify, resolved ++ events})
     {:noreply, {id, session, data}}
   end
@@ -152,8 +152,8 @@ defmodule Avatar do
   end
 
   defp resolved(context, {id, data}) when is_map(context) do
-    Logger.debug " resolved(context, {id, data}) when is_map(context) do"
-    events = context |> Map.get(:events) |> List.wrap
+    Logger.debug(" resolved(context, {id, data}) when is_map(context) do")
+    events = context |> Map.get(:events) |> List.wrap()
     changed = context |> Map.get(:changed, %{})
 
     {events, changed} = apply_rules({events, changed}, {id, data})
@@ -169,35 +169,45 @@ defmodule Avatar do
   # TODO: build a pipeline based on changed props, then apply
   defp apply_rules({events, changed}, {id, data}) do
     {events, changed} =
-      changed |> Enum.reduce({List.wrap(events), %{}}, fn change, {events, changed} ->
+      changed
+      |> Enum.reduce({List.wrap(events), %{}}, fn change, {events, changed} ->
         change = Map.new([change])
         {new_events, new_changed} = Rules.apply_rule(change, {id, data})
         {events ++ List.wrap(new_events), changed |> Map.merge(new_changed)}
       end)
 
     {events, changed} =
-      events |> Enum.reduce({events, changed}, fn event, {events, changed} ->
-      {new_events, new_changed} = Rules.apply_rule(event, {id, data})   #Rules.apply_rule( 目前什么都没有做
-      {events ++ List.wrap(new_events), changed |> Map.merge(new_changed)}
-    end)
+      events
+      |> Enum.reduce({events, changed}, fn event, {events, changed} ->
+        # Rules.apply_rule( 目前什么都没有做
+        {new_events, new_changed} = Rules.apply_rule(event, {id, data})
+        {events ++ List.wrap(new_events), changed |> Map.merge(new_changed)}
+      end)
 
     {events, changed}
   end
 
-  defp merge(data, nil) do  #什么事都没有做
+  # 什么事都没有做
+  defp merge(data, nil) do
     data
   end
 
-  defp merge({id, data}, changed) when is_map(changed) do  #改变的地方是一个map
-    new_data =  Map.merge(data, changed)
+  # 改变的地方是一个map
+  defp merge({id, data}, changed) when is_map(changed) do
+    new_data = Map.merge(data, changed)
     Character.save(id, new_data)
     new_data
   end
 
-  defp merge({id, data}, changed) when is_list(changed) do  #改变的地方是一个list
-    new_data = changed |> Enum.reduce(data, fn
-      {path, value}, data -> data |> put_in(path, value) #更改data，access 路径为path 的值为value
-    end)
+  # 改变的地方是一个list
+  defp merge({id, data}, changed) when is_list(changed) do
+    new_data =
+      changed
+      |> Enum.reduce(data, fn
+        # 更改data，access 路径为path 的值为value
+        {path, value}, data -> data |> put_in(path, value)
+      end)
+
     Character.save(id, new_data)
     new_data
   end

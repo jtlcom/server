@@ -14,11 +14,12 @@ defmodule Guid do
     @server_id <<< 24 ||| id
   end
 
-  def describe(guid) when (guid >>> 0) === 0x0000 do
-    %{catgory: :avatar, id: guid &&& 0xFFFFFF, server_id: (guid >>> 24) &&& 0xFFFF}
+  def describe(guid) when guid >>> 0 === 0x0000 do
+    %{catgory: :avatar, id: guid &&& 0xFFFFFF, server_id: guid >>> 24 &&& 0xFFFF}
   end
-  def describe(guid)  do
-    %{catgory: :avatar, id: guid &&& 0xFFFFFF, server_id: (guid >>> 24) &&& 0xFFFF}
+
+  def describe(guid) do
+    %{catgory: :avatar, id: guid &&& 0xFFFFFF, server_id: guid >>> 24 &&& 0xFFFF}
   end
 
   def online?(guid) do

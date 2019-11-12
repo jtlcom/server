@@ -1,13 +1,16 @@
 defmodule Gm do
-
   def coin(amount, {id, %{currencies: %{coin: coin} = currencies}}) do
     new_coin = coin + amount
-    {:notify, {:prop_changed, id, %{coin: new_coin}}, %{currencies: %{currencies | coin: new_coin}}}
+
+    {:notify, {:prop_changed, id, %{coin: new_coin}},
+     %{currencies: %{currencies | coin: new_coin}}}
   end
 
   def gold(amount, {id, %{currencies: %{gold: gold} = currencies}}) do
     new_gold = gold + amount
-    {:notify, {:prop_changed, id, %{gold: new_gold}}, %{currencies: %{currencies | gold: new_gold}}}
+
+    {:notify, {:prop_changed, id, %{gold: new_gold}},
+     %{currencies: %{currencies | gold: new_gold}}}
   end
 
   def add_item(item_id, count, _state) do
@@ -21,7 +24,7 @@ defmodule Gm do
   def exp(amount, {id, %{points: %{exp: exp} = points}}) do
     new_exp = amount + exp
     {:notify, {:prop_changed, id, %{exp: new_exp}}, %{point: %{points | exp: new_exp}}}
-    #{:notify, {:prop_changed, id, %{exp: new_exp}}, %{points: points |> Map.put(:exp, new_exp)}}
+    # {:notify, {:prop_changed, id, %{exp: new_exp}}, %{points: points |> Map.put(:exp, new_exp)}}
   end
 
   def level(lv, {id, data}) do
@@ -36,7 +39,9 @@ defmodule Gm do
 
   def bind_gold(amount, {id, %{currencies: %{bindGold: bindGold} = currencies}}) do
     new_bindGold = bindGold + amount
-    {:notify, {:prop_changed, id, %{bindGold: new_bindGold}}, %{currencies: %{currencies | bindGold: new_bindGold}}}
+
+    {:notify, {:prop_changed, id, %{bindGold: new_bindGold}},
+     %{currencies: %{currencies | bindGold: new_bindGold}}}
   end
 
   def clear({id, %{bag: bag}}) do
@@ -47,5 +52,4 @@ defmodule Gm do
     stock = Inventory.count(bag, item_id)
     {:resolve, :gm, {:lost, {:item, item_id}, stock}}
   end
-
 end

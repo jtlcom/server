@@ -10,12 +10,12 @@ defmodule GameDef do
     quote do
       defmodule unquote(mod) do
         use GameDef
-        GameDef.defconf unquote(options)
+        GameDef.defconf(unquote(options))
       end
     end
   end
 
-  defmacro defconst([path: path, getter: getter]) do
+  defmacro defconst(path: path, getter: getter) do
     config = load_const(path) |> to_atom_key
 
     quote do
@@ -30,7 +30,7 @@ defmodule GameDef do
 
     Keyword.get(options, :view)
     |> load_rows
-    |> Enum.map(&(make_getter(&1["key"], transform.(&1["value"]), options)))
+    |> Enum.map(&make_getter(&1["key"], transform.(&1["value"]), options))
   end
 
   def config_url(view) do
@@ -59,9 +59,9 @@ defmodule GameDef do
 
   def load_config(config_url) do
     config_url
-    |> HTTPoison.get!
+    |> HTTPoison.get!()
     |> Map.get(:body)
-    |> Poison.decode!
+    |> Poison.decode!()
   end
 
   def to_atom_key(config) when is_map(config) do
@@ -73,11 +73,11 @@ defmodule GameDef do
   end
 
   def to_tagged_tuple([h | t]) when is_binary(h) do
-    [Utils.to_atom(h) | t] |> List.to_tuple
+    [Utils.to_atom(h) | t] |> List.to_tuple()
   end
 
   def to_tagged_tuple([h | _] = list) when is_atom(h) do
-    list |> List.to_tuple
+    list |> List.to_tuple()
   end
 
   def to_tagged_tuples(list) do
@@ -108,6 +108,7 @@ defmodule GameDef do
 
   defp make_getter(key, value, options) do
     getter = Keyword.get(options, :getter, :get)
+
     quote do
       def unquote(getter)(unquote_splicing(List.wrap(key))) do
         unquote(Macro.escape(value))

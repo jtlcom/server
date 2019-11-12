@@ -10,22 +10,26 @@ defmodule Logical do
     %{id: id, count: count}
   end
 
-  def stackable?(id) do  #去Item里面取stack意义？
+  # 去Item里面取stack意义？
+  def stackable?(id) do
     get(id) |> Map.get(:stack, 0) > 0
   end
 
   def stack(item, amount) do
-    item |> Map.update(:count, amount + 1, &(&1 + amount)) #更新物品数量
+    # 更新物品数量
+    item |> Map.update(:count, amount + 1, &(&1 + amount))
   end
 
-  def require(id) do   #取出item_id物品的require属性
+  # 取出item_id物品的require属性
+  def require(id) do
     case get(id) do
       %{require: requirements} -> requirements
       _ -> nil
     end
   end
 
-  def use(id) do  #获取使用该物品的规则
+  # 获取使用该物品的规则
+  def use(id) do
     case get(id) do
       %{actions: actions} when map_size(actions) == 1 -> actions |> Enum.at(0)
       _ -> nil
