@@ -221,7 +221,7 @@ defmodule Avatar do
   end
 
   @thirty_days_act_id 1055
-  defp process_login({id, data} = state) do
+  defp process_login({_id, _data} = state) do
     # Logger.debug "process_login data: #{inspect data, pretty: true}"
     now_time = Utils.timestamp()
     changed = Periods.ThirtyDays.check_reset(@thirty_days_act_id, now_time, state)

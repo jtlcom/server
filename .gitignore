@@ -19,9 +19,11 @@ erl_crash.dump
 # Also ignore archive artifacts (built via "mix archive.build").
 *.ez
 
-# dets files
-characters
+# dets files.
+character
+items
 
-# For VS-Code plugins, also ignore
+# For VS-Code plugins, also ignore.
 /.elixir_ls/
+
 server_limit_loot
