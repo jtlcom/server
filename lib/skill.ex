@@ -1,3 +1,0 @@
-defmodule Skill do
-
-end

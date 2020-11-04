@@ -20,7 +20,7 @@ defmodule Bag do
         income |> Enum.map(fn {currency, price} -> {:gain, currency, price * count} end)
 
       # bag中减少的物品和数量
-      lost_effects = [{:lost, {:bag, index}, count}]
+      lost_effects = [{{:bag, index}, count}]
       context = %{action: {:bag, :sell}, events: {:sell, {:bag, index}}, changed: %{}}
       # 将消息发给avatar，avatar对玩家数据进行修改
       {:resolve, context, Effect.from_cost_rewards(lost_effects, income_effects)}
@@ -31,10 +31,6 @@ defmodule Bag do
 
   # 选中背包的index进行购买 默认用:bindGold购买物品
   def buy(index, count, currencyType \\ :bindGold, {_id, %{bag: bag, currencies: currencies}} = _data) do
-    # Logger.debug("sell ")
-    # Logger.debug "all: #{inspect all, pretty: true}"
-    # Logger.debug "bag: #{inspect bag, pretty: true}"
-    # Logger.debug "currencies: #{inspect currencies, pretty: true}"
     # 获取bag中index物品的信息
     with item <- Inventory.getItem(bag, index),
          # 获取角色当前currencyType \\ :bindGold这种货币还有多少
@@ -42,17 +38,13 @@ defmodule Bag do
          # 获取买这个物品的单价，并判断自己这种货币currencyType \\ :bindGold 够不够
          price when totalmoney >= price * count <-
            Map.get(Logical.buy(item.id), currencyType, totalmoney + 1) do
-      # Logger.debug "hhh"
-      # # Logger.debug "item.id: #{inspect item.id, pretty: true}"
-      # # Logger.debug "income: #{inspect income, pretty: true}"
       # 计算买入所花的钱
       cost_effects =
         [{currencyType, price}]
         |> Enum.map(fn {currency, price} -> {:lost, currency, price * count} end)
 
-      # Logger.debug "cost_effects: #{inspect cost_effects, pretty: true}"
       # 计算买入后的收益
-      get_effects = [{:gain, {:item, item.id}, count}]
+      get_effects = [{:item, item.id, count}]
       context = %{action: {:bag, :buy}, events: {:buy, {:bag, index}}, changed: %{}}
       {:resolve, context, Effect.from_cost_rewards(cost_effects, get_effects)}
     else
@@ -69,11 +61,11 @@ defmodule Bag do
     with {item, stock} <- Inventory.get(bag, index),
          # 判断仓库还能不能存放
          true <- Inventory.warehouse_can_store?(warehouse, item.id) do
-      # 仓库中多的
-      get_effects = [{:gain, :warehouse, {:item_id, item.id}, stock}]
+      # 仓库中增加的
+      get_effects = [{:warehouse, {:item_id, item.id}, stock}]
 
-      # bag中少的
-      lost_effects = [{:lost, {:bag, index}, stock}]
+      # bag中减少的
+      lost_effects = [{{:bag, index}, stock}]
       context = %{action: {:bag, :bag2warehouse},
                   events: {:bag2warehouse, {:bag, index}},
                   changed: %{}}
@@ -92,9 +84,9 @@ defmodule Bag do
          # 判断bag还能不能存放
          true <- Inventory.bag_can_store?(bag, bagCells, item.id) do
       # bag 获取东西
-      get_effects = [{:gain, {:item, item.id}, stock}]
+      get_effects = [{{:item, item.id}, stock}]
       # 仓库中少的
-      lost_effects = [{:lost, :warehouse, {:item_id, item.id}, stock}]
+      lost_effects = [{:warehouse, {:item_id, item.id}, stock}]
       context = %{action: {:bag, :warehouse2bag},
                   events: {:warehouse2bag, {:bag, index}},
                   changed: %{}}
@@ -121,7 +113,7 @@ defmodule Bag do
                 {lost_effects, incomes}
 
               income ->
-                {[{:lost, {:bag, index}, stock} | lost_effects],
+                {[{{:bag, index}, stock} | lost_effects],
                  income
                  |> Enum.reduce(incomes, fn {currency, price}, incomes ->
                    Map.update(incomes, currency, price, &(&1 + price * stock))
@@ -137,7 +129,8 @@ defmodule Bag do
   # 使用
   def use(index, count, {_id, %{bag: bag, gene: gene} = data}) do
     with {%{id: item_id} = item, _stock} <- Inventory.get(bag, index),
-         # Action.match?  判断requirements （需要的条件） ，data是否满足，requirement可以是bag的东西，玩家等级（level），vip等级或其他属性
+         # Action.match?  判断requirements(需要的条件),data是否满足
+         # requirement可以是bag的东西 玩家等级(level) vip等级或其他属性
          true <- Action.match?(Logical.require(item_id), data),
          # 获取使用该物品的规则
          {action, rule} <- Logical.use(item_id),
@@ -149,34 +142,6 @@ defmodule Bag do
     else
       _ -> :ok
     end
-  end
-
-  # 经验丹
-  defp declare(:exp, %{consume: consume?, params: [exp]}, {index, _item, count}, _gene) do
-    item_cost = {{:bag, index}, count}
-    reward = {:exp, exp * count}
-    consumed(consume?, item_cost, reward)
-  end
-
-  # 经验药水
-  defp declare(:exp_drug, %{consume: consume?, params: [_times, _sec] = params}, {index, _item, count}, _gene) do
-    item_cost = {{:bag, index}, count}
-    reward = {:gainExpSpeed, params, count}
-    consumed(consume?, item_cost, reward)
-  end
-
-  # 挂机卡
-  defp declare(:hook_time, %{consume: consume?, params: [times]}, {index, _item, count}, _gene) do
-    item_cost = {{:bag, index}, count}
-    reward = {:onHookTime, times * count}
-    consumed(consume?, item_cost, reward)
-  end
-
-  # 铜币
-  defp declare(:coin, %{consume: consume?, params: [amount]}, {index, _item, count}, _gene) do
-    item_cost = {{:bag, index}, count}
-    reward = {:coin, amount * count}
-    consumed(consume?, item_cost, reward)
   end
 
   # 添加背包格子数
@@ -194,13 +159,6 @@ defmodule Bag do
       end
 
     reward = {:bagCells, num * add_sells}
-    consumed(consume?, item_cost, reward)
-  end
-
-  # vip体验卡
-  defp declare(:vip, %{consume: consume?, params: [_lv, _sec] = params}, {index, _item, count}, _gene) do
-    item_cost = {{:bag, index}, count}
-    reward = {:vip, params, count}
     consumed(consume?, item_cost, reward)
   end
 

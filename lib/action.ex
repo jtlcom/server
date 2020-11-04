@@ -23,10 +23,6 @@ defmodule Action do
     vip_level >= min_level
   end
 
-  def match?({:class, class}, %{gene: gene}) do
-    class == -1 or class == Gene.class(gene)
-  end
-
   def match?({{mod, prop}, amount}, data) do
     Map.has_key?(data, mod) and get_in(data, [mod, prop]) >= amount
   end

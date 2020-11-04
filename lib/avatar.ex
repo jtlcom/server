@@ -80,7 +80,6 @@ defmodule Avatar do
   def handle_cast({{module, action}, args}, {id, _, data} = state) do
     # Logger.debug "avatar -> handle_cast({{module, action}, args}, {id, _, data} = state)"
     # TODO: pass module sub state when dispatching action
-    #! !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     dispatch(module, action, List.wrap(args) ++ [{id, data}])
     |> handle_result(state)
   end
@@ -92,7 +91,6 @@ defmodule Avatar do
   defp dispatch(module, action, args) do
     require Utils
 
-    # Logger.debug "dispatch"
     # 将字符串转为tuple,即对应成相应的模块
     mod = ("Elixir." <> (module |> Atom.to_string() |> Macro.camelize())) |> Utils.to_atom()
     func = action |> Atom.to_string() |> Macro.underscore() |> Utils.to_atom()
@@ -101,14 +99,12 @@ defmodule Avatar do
 
     if function_exported?(mod, func, length(args)) do
       try do
-        # Logger.debug "apply"
         # 调用相应的模块去处理
         apply(mod, func, args)
       rescue
         err -> IO.puts("#{module}:#{action} error: #{inspect(err)}")
       end
     else
-      # Logger.debug "else"
       {:reply, {{module, action}, "action received"}}
     end
   end
@@ -126,14 +122,9 @@ defmodule Avatar do
 
   defp handle_result({:resolve, context, effects}, {id, session, data}) do
     # apply partial resolved changes
-    # Logger.debug "here2"
-    # Logger.debug "handle_result({:resolve, context, effects}, {id, session, data}) do"
     # sell这一步没有起作用
     {resolved, data} = resolved(context, {id, data})
 
-    # Logger.debug "effects : #{inspect effects, pretty: true}"
-    # List.wrap(effects)
-    # List.flatten(effects)
     {events, data} =
       effects
       # |> Enum.flat_map_reduce(data, fn effect, data ->
@@ -161,7 +152,6 @@ defmodule Avatar do
   end
 
   defp resolved(_context, {_, data}) do
-    # Logger.debug "resolved(_context, {_, data}) do"
     {[], data}
   end
 
@@ -220,11 +210,7 @@ defmodule Avatar do
     [["", id, data]]
   end
 
-  @thirty_days_act_id 1055
   defp process_login({_id, _data} = state) do
-    # Logger.debug "process_login data: #{inspect data, pretty: true}"
-    now_time = Utils.timestamp()
-    changed = Periods.ThirtyDays.check_reset(@thirty_days_act_id, now_time, state)
-    merge(state, changed)
+    merge(state, %{})
   end
 end

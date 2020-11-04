@@ -13,6 +13,7 @@ defmodule Effect do
       {:item, id, count} -> {:lost, {:item, id}, count}
       {{:bag, index}, count} -> {:lost, {:bag, index}, count}
       {:lost, currency, pric_count} -> {:lost, currency, pric_count}
+      {:warehouse, {:item_id, id}, amount} -> {:lost, :warehouse, {:item_id, id}, amount}
       {point, amount} -> {:lost, point, amount}
     end)
   end
@@ -30,8 +31,8 @@ defmodule Effect do
       {:gainExpSpeed, [times, sec], count} -> {:gainExpSpeed, times, sec * count}
       {:vip, [lv, sec], count} -> {:vip, lv, sec * count}
       {:gain, currency, price_count} -> {:gain, currency, price_count}
+      {:warehouse, {:item_id, id}, amount} -> {:gain, :warehouse, {:item_id, id}, amount}
       {point, amount} -> {:gain, point, amount}
-      reward -> reward
     end)
   end
 

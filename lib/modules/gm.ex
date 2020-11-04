@@ -24,12 +24,6 @@ defmodule Gm do
   def exp(amount, {id, %{points: %{exp: exp} = points}}) do
     new_exp = amount + exp
     {:notify, {:prop_changed, id, %{exp: new_exp}}, %{point: %{points | exp: new_exp}}}
-    # {:notify, {:prop_changed, id, %{exp: new_exp}}, %{points: points |> Map.put(:exp, new_exp)}}
-  end
-
-  def level(lv, {id, data}) do
-    battle_power = BattlePower.all(data |> Map.put(:level, lv))
-    {:notify, {:prop_changed, id, %{level: lv, battlePower: battle_power}}, %{level: lv}}
   end
 
   def vip(lv, {id, %{vip: vip}}) do

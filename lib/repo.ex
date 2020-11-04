@@ -80,28 +80,11 @@ defmodule Repo do
             warehouse: %{max: @warehouse_init_cells, bag: %{}},
             vip: %{level: 0, exp: 0, sec: -1},
             vsn: 1,
-            gainExpSpeed: %{speed: 1, sec: 0},
-            onHookTime: 0,
-            mount: %{
-              mount_id: 1,
-              blessing: 0,
-              beast_soul: %{201 => 5, 202 => 400},
-              actived: %{101 => 0},
-              hh: 0
-            },
-            pet: %{
-              pet_id: 1,
-              blessing: 0,
-              exp: 0,
-              beast_soul: %{201 => 5, 202 => 400},
-              actived: %{101 => 0},
-              hh: 0
-            },
-            dresses: %{actived: %{802 => 0}, exp: 0}
+            gainExpSpeed: %{speed: 1, sec: 0}
           })
 
         1 ->
-          character |> Map.put(:periods, %{}) |> Map.put(:vsn, 2)
+          character |> Map.put(:vsn, 2)
 
         ## 2 -> character |> Map.put(:d, 0) |> Map.put(:vsn, 3)
         ## 3 -> character |> Map.put(:e, 0) |> Map.put(:vsn, 4)

@@ -1,3 +1,0 @@
-defmodule Links do
-
-end

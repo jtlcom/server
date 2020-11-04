@@ -1,12 +1,4 @@
 defmodule Math do
-  def clamp(value, min, max) do
-    value |> max(min) |> min(max)
-  end
-
-  def lerp(a, b, t) do
-    a + (b - a) * t
-  end
-
   def levelup(level, exp, fun) do
     case fun.(level) do
       # max level reached
