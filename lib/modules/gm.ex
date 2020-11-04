@@ -26,11 +26,6 @@ defmodule Gm do
     {:notify, {:prop_changed, id, %{exp: new_exp}}, %{point: %{points | exp: new_exp}}}
   end
 
-  def vip(lv, {id, %{vip: vip}}) do
-    vip = vip |> Map.put(:level, lv)
-    {:notify, {:prop_changed, id, %{vip: vip}}, %{vip: vip}}
-  end
-
   def bind_gold(amount, {id, %{currencies: %{bindGold: bindGold} = currencies}}) do
     new_bindGold = bindGold + amount
 

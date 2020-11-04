@@ -19,10 +19,6 @@ defmodule Action do
     level >= min_level
   end
 
-  def match?({:vip, min_level}, %{vip: %{level: vip_level}}) do
-    vip_level >= min_level
-  end
-
   def match?({{mod, prop}, amount}, data) do
     Map.has_key?(data, mod) and get_in(data, [mod, prop]) >= amount
   end

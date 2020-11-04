@@ -78,7 +78,6 @@ defmodule Repo do
             },
             bagCells: @init_cells,
             warehouse: %{max: @warehouse_init_cells, bag: %{}},
-            vip: %{level: 0, exp: 0, sec: -1},
             vsn: 1,
             gainExpSpeed: %{speed: 1, sec: 0}
           })

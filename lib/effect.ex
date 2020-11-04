@@ -29,7 +29,6 @@ defmodule Effect do
     |> Enum.map(fn
       {:item, id, count} -> {:gain, {:item, id}, count}
       {:gainExpSpeed, [times, sec], count} -> {:gainExpSpeed, times, sec * count}
-      {:vip, [lv, sec], count} -> {:vip, lv, sec * count}
       {:gain, currency, price_count} -> {:gain, currency, price_count}
       {:warehouse, {:item_id, id}, amount} -> {:gain, :warehouse, {:item_id, id}, amount}
       {point, amount} -> {:gain, point, amount}
@@ -164,11 +163,6 @@ defmodule Effect do
   def resolve({:bagCells, num}, {id, _context, %{bagCells: bagCells}}) do
     new_bagCells = bagCells + num
     {{:prop_changed, id, %{bagCells: new_bagCells}}, %{bagCells: new_bagCells}}
-  end
-
-  def resolve({:vip, lv, sec}, {id, _context, %{vip: vip}}) do
-    new_vip = %{vip | level: lv, sec: sec}
-    {{:prop_changed, id, %{vip: new_vip}}, %{vip: new_vip}}
   end
 
   def resolve(effect, {_id, _context, _data}) do
